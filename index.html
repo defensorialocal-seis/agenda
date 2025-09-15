@@ -18,6 +18,7 @@
             --dark-text: #333;
             --light-text: #fff;
             --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --blue-event-color: #2980B9;
         }
 
         * {
@@ -28,7 +29,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, #E0F7FA 0%, #CFD8DC 100%);
             color: var(--dark-text);
             min-height: 100vh;
             padding: 20px;
@@ -162,6 +163,11 @@
             background-color: var(--secondary-color);
             color: white;
         }
+        
+        .selected-day {
+            background-color: var(--primary-color);
+            color: white;
+        }
 
         .has-event {
             position: relative;
@@ -178,11 +184,6 @@
             border-radius: 50%;
         }
 
-        .event-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
         .event-item {
             padding: 10px;
             margin-bottom: 10px;
@@ -191,6 +192,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
         }
 
         .event-task {
@@ -206,7 +208,7 @@
         }
 
         .event-event {
-            background: linear-gradient(to right, var(--event-color), #78ffd6);
+            background-color: var(--blue-event-color);
         }
 
         .event-hearing {
@@ -226,6 +228,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+        }
+
+        .contact-item .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .contact-item .actions button {
+            padding: 5px 10px;
+            font-size: 0.8rem;
         }
 
         .phone-link {
@@ -264,7 +277,7 @@
             justify-content: center;
             align-items: center;
         }
-
+        
         .modal-content {
             background-color: white;
             padding: 25px;
@@ -283,37 +296,11 @@
             cursor: pointer;
         }
 
-        .auth-container {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            max-width: 400px;
-            margin: 100px auto;
-            text-align: center;
-        }
-
-        .auth-form {
+        .modal-buttons {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .auth-form input {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        .auth-buttons {
-            display: flex;
+            justify-content: flex-end;
             gap: 10px;
-            justify-content: center;
-        }
-
-        .hidden {
-            display: none;
+            margin-top: 20px;
         }
 
         .add-event-btn {
@@ -321,6 +308,24 @@
             width: 100%;
             padding: 12px;
             font-size: 16px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .pagination button {
+            background: none;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .pagination button.active {
+            background: var(--primary-color);
+            color: white;
         }
 
         @media (max-width: 768px) {
@@ -342,18 +347,12 @@
                     <h1>Agenda para hoy:</h1>
                     <div class="current-date" id="current-date"></div>
                 </div>
-                </header>
+            </header>
 
             <div class="left-panel">
                 <div class="panel">
                     <h2>Acciones Rápidas</h2>
                     <button id="open-event-modal" class="add-event-btn">+ Nuevo Evento</button>
-                </div>
-
-                <div class="panel">
-                    <h2>Próximos Eventos</h2>
-                    <div class="event-list" id="event-list">
-                        </div>
                 </div>
 
                 <div class="panel">
@@ -373,7 +372,7 @@
                     <button id="save-contact">Guardar Contacto</button>
 
                     <div class="contact-list" id="contact-list">
-                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -385,29 +384,35 @@
                     <button id="next-month">→</button>
                 </div>
                 <div class="calendar" id="calendar">
-                    </div>
+                </div>
 
-                <div id="day-events" style="margin-top: 20px;">
-                    <h3>Eventos del día seleccionado</h3>
-                    <div id="day-events-list"></div>
+                <div id="monthly-events" style="margin-top: 20px;">
+                    <h3>Eventos del Mes</h3>
+                    <div id="monthly-events-list"></div>
+                    <div class="pagination" id="monthly-pagination"></div>
                 </div>
             </div>
         </div>
 
         <div id="event-modal" class="modal">
             <div class="modal-content">
-                <span class="close-modal" id="close-modal">&times;</span>
-                <h2>Nuevo Evento</h2>
+                <span class="close-modal" id="close-event-modal">&times;</span>
+                <h2 id="modal-title-h2">Nuevo Evento</h2>
+                <input type="hidden" id="event-id">
                 <div class="form-group">
-                    <label for="modal-title">Título</label>
-                    <input type="text" id="modal-title" placeholder="Título del evento">
+                    <label for="modal-title">Título del evento</label>
+                    <input type="text" id="modal-title" placeholder="Ej: Llamar a cliente">
                 </div>
                 <div class="form-group">
-                    <label for="modal-date">Fecha y Hora</label>
-                    <input type="datetime-local" id="modal-date">
+                    <label for="modal-start-date">Fecha y hora de inicio</label>
+                    <input type="datetime-local" id="modal-start-date">
                 </div>
                 <div class="form-group">
-                    <label for="modal-type">Tipo de Evento</label>
+                    <label for="modal-end-date">Fecha y hora de fin</label>
+                    <input type="datetime-local" id="modal-end-date">
+                </div>
+                <div class="form-group">
+                    <label for="modal-type">Tipo de evento</label>
                     <select id="modal-type">
                         <option value="event">Evento</option>
                         <option value="task">Tarea</option>
@@ -417,16 +422,56 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="modal-description">Descripción</label>
-                    <textarea id="modal-description" rows="3" placeholder="Descripción del evento"></textarea>
+                    <label for="modal-description">Descripción del evento</label>
+                    <textarea id="modal-description" rows="3" placeholder="Detalles del evento"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="modal-contact">Vincular Contacto (opcional)</label>
+                    <label for="modal-contact">Vincular un contacto (opcional)</label>
                     <select id="modal-contact">
                         <option value="">Seleccionar contacto</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <input type="checkbox" id="exclude-weekends">
+                    <label for="exclude-weekends" style="display: inline-block;">No marcar sábados o domingos</label>
+                </div>
                 <button id="modal-save-event">Guardar Evento</button>
+            </div>
+        </div>
+
+        <div id="event-details-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" id="close-details-modal">&times;</span>
+                <div id="event-details-content"></div>
+                <div class="modal-buttons">
+                    <button id="edit-event-btn">Editar</button>
+                    <button id="print-event-btn">Imprimir</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="contact-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" id="close-contact-modal">&times;</span>
+                <h2 id="contact-modal-h2">Editar Contacto</h2>
+                <input type="hidden" id="contact-id">
+                <div class="form-group">
+                    <label for="edit-contact-name">Nombre</label>
+                    <input type="text" id="edit-contact-name" placeholder="Nombre">
+                </div>
+                <div class="form-group">
+                    <label for="edit-contact-email">Email</label>
+                    <input type="email" id="edit-contact-email" placeholder="Email">
+                </div>
+                <div class="form-group">
+                    <label for="edit-contact-phone">Teléfono</label>
+                    <input type="tel" id="edit-contact-phone" placeholder="Teléfono">
+                </div>
+                <div class="form-group">
+                    <label for="edit-contact-address">Domicilio</label>
+                    <input type="text" id="edit-contact-address" placeholder="Domicilio">
+                </div>
+                <button id="modal-save-contact">Guardar Cambios</button>
             </div>
         </div>
 
@@ -437,7 +482,6 @@
     </div>
 
     <script>
-        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBZZOjKInC-GpNvhyRSXWs3x6w_JQ7TtuU",
             authDomain: "agendatareas6.firebaseapp.com",
@@ -447,101 +491,99 @@
             appId: "1:861923763083:web:ec9b30c50ce3fec057058e"
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // Variables globales
-        let currentUser = { uid: "defaultUser" }; // Usuario por defecto para simular la sesión
+        let currentUser = { uid: "defaultUser" };
         let currentDate = new Date();
         let currentMonth = currentDate.getMonth();
         let currentYear = currentDate.getFullYear();
-        let selectedDay = currentDate.getDate();
         let events = [];
         let contacts = [];
         let notificationCheckInterval;
+        let selectedDates = {};
+        let monthlyEventsPage = 0;
+        const EVENTS_PER_PAGE = 5;
 
-        // Elementos DOM
         const currentDateElement = document.getElementById('current-date');
         const currentMonthElement = document.getElementById('current-month');
         const calendarElement = document.getElementById('calendar');
-        const eventListElement = document.getElementById('event-list');
         const contactListElement = document.getElementById('contact-list');
         const contactSelectElement = document.getElementById('modal-contact');
-        const dayEventsListElement = document.getElementById('day-events-list');
+        const monthlyEventsListElement = document.getElementById('monthly-events-list');
+        const monthlyPaginationElement = document.getElementById('monthly-pagination');
         const notificationElement = document.getElementById('notification');
         const notificationTitleElement = document.getElementById('notification-title');
         const notificationMessageElement = document.getElementById('notification-message');
-        const authSection = document.getElementById('auth-section'); // Mantenemos la referencia para evitar errores
-        const appSection = document.getElementById('app-section');
         const eventModal = document.getElementById('event-modal');
+        const eventDetailsModal = document.getElementById('event-details-modal');
+        const eventDetailsContent = document.getElementById('event-details-content');
+        const contactModal = document.getElementById('contact-modal');
+        
+        const modalTitleH2 = document.getElementById('modal-title-h2');
+        const modalSaveEventBtn = document.getElementById('modal-save-event');
+        const eventIdInput = document.getElementById('event-id');
+        const startDateInput = document.getElementById('modal-start-date');
+        const endDateInput = document.getElementById('modal-end-date');
+        const excludeWeekendsCheckbox = document.getElementById('exclude-weekends');
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar la aplicación sin autenticación de usuario
             initApp();
         });
 
-        // Inicializar la aplicación
         function initApp() {
-            // Cargar datos desde Firebase usando el usuario por defecto
             loadEvents();
             loadContacts();
             
-            // El resto de tu inicialización...
             updateCurrentDate();
             renderCalendar();
             startNotificationChecker();
 
-            // Event listeners
-            document.getElementById('prev-month').addEventListener('click', () => {
-                changeMonth(-1);
-            });
-
-            document.getElementById('next-month').addEventListener('click', () => {
-                changeMonth(1);
-            });
-
+            document.getElementById('prev-month').addEventListener('click', () => { changeMonth(-1); });
+            document.getElementById('next-month').addEventListener('click', () => { changeMonth(1); });
             document.getElementById('save-contact').addEventListener('click', saveContact);
+            document.getElementById('open-event-modal').addEventListener('click', () => {
+                modalTitleH2.textContent = 'Nuevo Evento';
+                modalSaveEventBtn.textContent = 'Guardar Evento';
+                eventIdInput.value = '';
+                startDateInput.value = '';
+                endDateInput.value = '';
+                excludeWeekendsCheckbox.checked = false;
+                openEventModal();
+            });
             document.getElementById('modal-save-event').addEventListener('click', saveEvent);
-            document.getElementById('open-event-modal').addEventListener('click', openEventModal);
-            document.getElementById('close-modal').addEventListener('click', closeEventModal);
+            document.getElementById('close-event-modal').addEventListener('click', closeEventModal);
+            document.getElementById('close-details-modal').addEventListener('click', closeEventDetailsModal);
+            document.getElementById('close-contact-modal').addEventListener('click', closeContactModal);
+            document.getElementById('modal-save-contact').addEventListener('click', saveEditedContact);
+            document.getElementById('print-event-btn').addEventListener('click', printEventDetails);
+            document.getElementById('edit-event-btn').addEventListener('click', editEvent);
 
-            // Cerrar modal al hacer clic fuera de él
             window.addEventListener('click', (e) => {
-                if (e.target === eventModal) {
-                    closeEventModal();
-                }
+                if (e.target === eventModal) { closeEventModal(); }
+                if (e.target === eventDetailsModal) { closeEventDetailsModal(); }
+                if (e.target === contactModal) { closeContactModal(); }
             });
         }
 
-        // Abrir modal de evento
-        function openEventModal() {
-            eventModal.style.display = 'flex';
-        }
+        function openEventModal() { eventModal.style.display = 'flex'; }
+        function closeEventModal() { eventModal.style.display = 'none'; }
+        function openEventDetailsModal() { eventDetailsModal.style.display = 'flex'; }
+        function closeEventDetailsModal() { eventDetailsModal.style.display = 'none'; }
+        function openContactModal() { contactModal.style.display = 'flex'; }
+        function closeContactModal() { contactModal.style.display = 'none'; }
 
-        // Cerrar modal de evento
-        function closeEventModal() {
-            eventModal.style.display = 'none';
-        }
-
-        // Actualizar la fecha actual
         function updateCurrentDate() {
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             currentDateElement.textContent = currentDate.toLocaleDateString('es-ES', options);
         }
 
-        // Renderizar el calendario
         function renderCalendar() {
-            // Establecer el texto del mes actual
-            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                               'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
             currentMonthElement.textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
-            // Limpiar el calendario
             calendarElement.innerHTML = '';
-
-            // Añadir los días de la semana
             const weekdays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
             weekdays.forEach(day => {
                 const dayElement = document.createElement('div');
@@ -550,34 +592,39 @@
                 calendarElement.appendChild(dayElement);
             });
 
-            // Obtener el primer día del mes y la cantidad de días
             const firstDay = new Date(currentYear, currentMonth, 1).getDay();
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
 
-            // Añadir días vacíos para alinear el primer día
             for (let i = 0; i < firstDay; i++) {
                 const emptyDay = document.createElement('div');
                 emptyDay.className = 'day empty';
                 calendarElement.appendChild(emptyDay);
             }
 
-            // Añadir los días del mes
             for (let day = 1; day <= daysInMonth; day++) {
                 const dayElement = document.createElement('div');
                 dayElement.className = 'day';
                 dayElement.textContent = day;
                 
-                // Marcar el día actual
-                if (day === selectedDay && currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear()) {
+                const dayDate = new Date(currentYear, currentMonth, day);
+                const dayDateString = dayDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                
+                if (selectedDates[dayDateString]) {
+                    dayElement.classList.add('selected-day');
+                } else if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
                     dayElement.classList.add('current-day');
                 }
 
-                // Marcar días con eventos
                 const hasEvent = events.some(event => {
-                    const eventDate = new Date(event.date);
-                    return eventDate.getDate() === day && 
-                           eventDate.getMonth() === currentMonth && 
-                           eventDate.getFullYear() === currentYear;
+                    const eventDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
+                    if (!eventDate || isNaN(eventDate)) return false;
+                    const currentDayMs = new Date(currentYear, currentMonth, day).getTime();
+                    
+                    const eventStartMs = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()).getTime();
+                    const eventEndMs = event.endDate ? new Date(new Date(event.endDate).getFullYear(), new Date(event.endDate).getMonth(), new Date(event.endDate).getDate()).getTime() : eventStartMs;
+                    
+                    return currentDayMs >= eventStartMs && currentDayMs <= eventEndMs;
                 });
                 
                 if (hasEvent) {
@@ -585,19 +632,26 @@
                 }
 
                 dayElement.addEventListener('click', () => {
-                    selectedDay = day;
+                    if (selectedDates[dayDateString]) {
+                        delete selectedDates[dayDateString];
+                    } else {
+                        if (excludeWeekendsCheckbox.checked) {
+                            if (dayDate.getDay() === 0 || dayDate.getDay() === 6) {
+                                alert('No puedes seleccionar fines de semana con esta opción habilitada.');
+                                return;
+                            }
+                        }
+                        selectedDates[dayDateString] = true;
+                    }
                     renderCalendar();
-                    showDayEvents(day);
                 });
-
                 calendarElement.appendChild(dayElement);
             }
         }
 
-        // Cambiar mes
         function changeMonth(direction) {
             currentMonth += direction;
-            
+            selectedDates = {};
             if (currentMonth < 0) {
                 currentMonth = 11;
                 currentYear--;
@@ -605,143 +659,136 @@
                 currentMonth = 0;
                 currentYear++;
             }
-            
+            monthlyEventsPage = 0;
             renderCalendar();
+            renderMonthlyEvents();
         }
 
-        // Cargar eventos desde Firebase
         function loadEvents() {
             if (!currentUser) return;
             
             db.collection('users').doc(currentUser.uid).collection('events')
-                .orderBy('date', 'asc')
+                .orderBy('startDate', 'asc')
                 .onSnapshot(snapshot => {
-                    events = [];
-                    snapshot.forEach(doc => {
-                        events.push({ id: doc.id, ...doc.data() });
-                    });
-                    renderEvents();
+                    events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     renderCalendar();
-                    // Mostrar eventos del día seleccionado
-                    showDayEvents(selectedDay);
+                    renderMonthlyEvents();
                 }, error => {
                     console.error('Error cargando eventos:', error);
                 });
         }
 
-        // Guardar evento en Firebase
         function saveEvent() {
-            if (!currentUser) {
-                alert('Debe iniciar sesión para guardar eventos.');
-                return;
-            }
+            if (!currentUser) { alert('Debe iniciar sesión para guardar eventos.'); return; }
             
+            const eventId = eventIdInput.value;
             const title = document.getElementById('modal-title').value;
-            const date = document.getElementById('modal-date').value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
             const description = document.getElementById('modal-description').value;
             const contactId = document.getElementById('modal-contact').value;
             const type = document.getElementById('modal-type').value;
 
-            if (!title || !date) {
-                alert('Por favor, complete al menos el título y la fecha.');
-                return;
-            }
+            if (!title || !startDate) { alert('Por favor, complete al menos el título y la fecha de inicio.'); return; }
+            
+            const eventData = { title, startDate, endDate, description, contactId, type, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
 
-            db.collection('users').doc(currentUser.uid).collection('events').add({
-                title,
-                date,
-                description,
-                contactId,
-                type,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                // Limpiar formulario
-                document.getElementById('modal-title').value = '';
-                document.getElementById('modal-date').value = '';
-                document.getElementById('modal-description').value = '';
-                document.getElementById('modal-contact').value = '';
-                
-                // Cerrar modal
-                closeEventModal();
-                
-                alert('Evento guardado correctamente.');
-            })
-            .catch(error => {
-                alert('Error al guardar evento: ' + error.message);
-            });
+            if (eventId) {
+                db.collection('users').doc(currentUser.uid).collection('events').doc(eventId).update(eventData)
+                    .then(() => {
+                        alert('Evento actualizado correctamente.');
+                        closeEventModal();
+                    })
+                    .catch(error => { alert('Error al actualizar evento: ' + error.message); });
+            } else {
+                db.collection('users').doc(currentUser.uid).collection('events').add(eventData)
+                    .then(() => {
+                        alert('Evento guardado correctamente.');
+                        closeEventModal();
+                    })
+                    .catch(error => { alert('Error al guardar evento: ' + error.message); });
+            }
+            document.getElementById('modal-title').value = '';
+            startDateInput.value = '';
+            endDateInput.value = '';
+            document.getElementById('modal-description').value = '';
+            document.getElementById('modal-contact').value = '';
         }
 
-        // Eliminar evento de Firebase
         function deleteEvent(id) {
             if (!currentUser) return;
             
             db.collection('users').doc(currentUser.uid).collection('events').doc(id).delete()
-                .catch(error => {
-                    alert('Error al eliminar evento: ' + error.message);
-                });
+                .catch(error => { console.error('Error al eliminar evento: ' + error.message); });
         }
 
-        // Renderizar eventos en la lista
-        function renderEvents() {
-            eventListElement.innerHTML = '';
+        function renderMonthlyEvents() {
+            monthlyEventsListElement.innerHTML = '';
+            monthlyPaginationElement.innerHTML = '';
             
-            // Ordenar eventos por fecha
-            const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const monthlyEvents = events.filter(event => {
+                const eventDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
+                return eventDate && eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+            });
             
-            // Mostrar solo los próximos 5 eventos
-            const now = new Date();
-            const upcomingEvents = sortedEvents.filter(event => new Date(event.date) > now).slice(0, 5);
-            
-            if (upcomingEvents.length === 0) {
-                eventListElement.innerHTML = '<p>No hay eventos próximos.</p>';
+            if (monthlyEvents.length === 0) {
+                monthlyEventsListElement.innerHTML = '<p>No hay eventos para este mes.</p>';
                 return;
             }
             
-            upcomingEvents.forEach(event => {
+            const start = monthlyEventsPage * EVENTS_PER_PAGE;
+            const end = start + EVENTS_PER_PAGE;
+            const paginatedEvents = monthlyEvents.slice(start, end);
+            
+            paginatedEvents.forEach(event => {
                 const eventElement = document.createElement('div');
                 eventElement.className = `event-item event-${event.type}`;
+                eventElement.dataset.id = event.id;
                 
-                const eventDate = new Date(event.date);
-                const options = { 
-                    year: 'numeric', 
-                    month: 'short', 
-                    day: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                };
+                const eventStartDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
+                const eventEndDate = event.endDate ? new Date(event.endDate) : null;
                 
+                const startDateStr = eventStartDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const endDateStr = eventEndDate ? eventEndDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
                 eventElement.innerHTML = `
                     <div>
                         <strong>${event.title}</strong>
-                        <p>${eventDate.toLocaleDateString('es-ES', options)}</p>
+                        <p>Inicio: ${startDateStr}</p>
+                        ${event.endDate ? `<p>Fin: ${endDateStr}</p>` : ''}
                     </div>
                     <button class="delete-event" data-id="${event.id}">×</button>
                 `;
-                
-                eventListElement.appendChild(eventElement);
+                eventElement.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-event')) {
+                        deleteEvent(e.target.dataset.id);
+                    } else {
+                        showEventDetails(event.id);
+                    }
+                });
+                monthlyEventsListElement.appendChild(eventElement);
             });
             
-            // Añadir event listeners para eliminar eventos
-            document.querySelectorAll('.delete-event').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const id = e.target.dataset.id;
-                    deleteEvent(id);
+            const totalPages = Math.ceil(monthlyEvents.length / EVENTS_PER_PAGE);
+            for (let i = 0; i < totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i + 1;
+                pageButton.classList.toggle('active', i === monthlyEventsPage);
+                pageButton.addEventListener('click', () => {
+                    monthlyEventsPage = i;
+                    renderMonthlyEvents();
                 });
-            });
+                monthlyPaginationElement.appendChild(pageButton);
+            }
         }
 
-        // Cargar contactos desde Firebase
         function loadContacts() {
             if (!currentUser) return;
             
             db.collection('users').doc(currentUser.uid).collection('contacts')
                 .orderBy('name', 'asc')
                 .onSnapshot(snapshot => {
-                    contacts = [];
-                    snapshot.forEach(doc => {
-                        contacts.push({ id: doc.id, ...doc.data() });
-                    });
+                    contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     renderContacts();
                     loadContactsToSelect();
                 }, error => {
@@ -749,71 +796,62 @@
                 });
         }
 
-        // Guardar contacto en Firebase
         function saveContact() {
-            if (!currentUser) {
-                alert('Debe iniciar sesión para guardar contactos.');
-                return;
-            }
+            if (!currentUser) { alert('Debe iniciar sesión para guardar contactos.'); return; }
             
             const name = document.getElementById('contact-name').value;
             const email = document.getElementById('contact-email').value;
             const phone = document.getElementById('contact-phone').value;
             const address = document.getElementById('contact-address').value;
 
-            if (!name) {
-                alert('Por favor, ingrese al menos un nombre.');
-                return;
-            }
+            if (!name) { alert('Por favor, ingrese al menos un nombre.'); return; }
 
             db.collection('users').doc(currentUser.uid).collection('contacts').add({
-                name,
-                email,
-                phone,
-                address,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                name, email, phone, address, createdAt: firebase.firestore.FieldValue.serverTimestamp()
             })
             .then(() => {
-                // Limpiar formulario
                 document.getElementById('contact-name').value = '';
                 document.getElementById('contact-email').value = '';
                 document.getElementById('contact-phone').value = '';
                 document.getElementById('contact-address').value = '';
-                
                 alert('Contacto guardado correctamente.');
             })
-            .catch(error => {
-                alert('Error al guardar contacto: ' + error.message);
-            });
+            .catch(error => { alert('Error al guardar contacto: ' + error.message); });
         }
 
-        // Eliminar contacto de Firebase
+        function saveEditedContact() {
+            const contactId = document.getElementById('contact-id').value;
+            const name = document.getElementById('edit-contact-name').value;
+            const email = document.getElementById('edit-contact-email').value;
+            const phone = document.getElementById('edit-contact-phone').value;
+            const address = document.getElementById('edit-contact-address').value;
+
+            if (!name) { alert('Por favor, ingrese al menos un nombre.'); return; }
+
+            db.collection('users').doc(currentUser.uid).collection('contacts').doc(contactId).update({
+                name, email, phone, address
+            })
+            .then(() => {
+                alert('Contacto actualizado correctamente.');
+                closeContactModal();
+            })
+            .catch(error => { alert('Error al actualizar contacto: ' + error.message); });
+        }
+
         function deleteContact(id) {
             if (!currentUser) return;
-            
             db.collection('users').doc(currentUser.uid).collection('contacts').doc(id).delete()
-                .catch(error => {
-                    alert('Error al eliminar contacto: ' + error.message);
-                });
+                .catch(error => { console.error('Error al eliminar contacto: ' + error.message); });
         }
 
-        // Renderizar contactos
         function renderContacts() {
             contactListElement.innerHTML = '';
-            
-            if (contacts.length === 0) {
-                contactListElement.innerHTML = '<p>No hay contactos guardados.</p>';
-                return;
-            }
+            if (contacts.length === 0) { contactListElement.innerHTML = '<p>No hay contactos guardados.</p>'; return; }
             
             contacts.forEach(contact => {
                 const contactElement = document.createElement('div');
                 contactElement.className = 'contact-item';
-                
-                // Crear enlace para teléfono
-                const phoneHtml = contact.phone ? 
-                    `<a href="tel:${contact.phone}" class="phone-link">${contact.phone}</a>` : 
-                    'Sin teléfono';
+                const phoneHtml = contact.phone ? `<a href="tel:${contact.phone}" class="phone-link">${contact.phone}</a>` : 'Sin teléfono';
                 
                 contactElement.innerHTML = `
                     <div>
@@ -821,25 +859,38 @@
                         <p>${contact.email || 'Sin email'} | ${phoneHtml}</p>
                         <p>${contact.address || 'Sin domicilio'}</p>
                     </div>
-                    <button class="delete-contact" data-id="${contact.id}">×</button>
+                    <div class="actions">
+                        <button class="edit-contact-btn" data-id="${contact.id}">Editar</button>
+                        <button class="delete-contact" data-id="${contact.id}">×</button>
+                    </div>
                 `;
-                
                 contactListElement.appendChild(contactElement);
             });
             
-            // Añadir event listeners para eliminar contactos
             document.querySelectorAll('.delete-contact').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const id = e.target.dataset.id;
-                    deleteContact(id);
-                });
+                button.addEventListener('click', (e) => { deleteContact(e.target.dataset.id); });
+            });
+
+            document.querySelectorAll('.edit-contact-btn').forEach(button => {
+                button.addEventListener('click', (e) => { editContact(e.target.dataset.id); });
             });
         }
 
-        // Cargar contactos al select
+        function editContact(contactId) {
+            const contactToEdit = contacts.find(c => c.id === contactId);
+            if (!contactToEdit) return;
+
+            document.getElementById('contact-id').value = contactToEdit.id;
+            document.getElementById('edit-contact-name').value = contactToEdit.name;
+            document.getElementById('edit-contact-email').value = contactToEdit.email;
+            document.getElementById('edit-contact-phone').value = contactToEdit.phone;
+            document.getElementById('edit-contact-address').value = contactToEdit.address;
+
+            openContactModal();
+        }
+
         function loadContactsToSelect() {
             contactSelectElement.innerHTML = '<option value="">Seleccionar contacto</option>';
-            
             contacts.forEach(contact => {
                 const option = document.createElement('option');
                 option.value = contact.id;
@@ -848,72 +899,86 @@
             });
         }
 
-        // Mostrar eventos de un día específico
-        function showDayEvents(day) {
-            dayEventsListElement.innerHTML = '';
+        function showEventDetails(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
             
-            const selectedDate = new Date(currentYear, currentMonth, day);
-            const dayEvents = events.filter(event => {
-                const eventDate = new Date(event.date);
-                return eventDate.getDate() === day && 
-                       eventDate.getMonth() === currentMonth && 
-                       eventDate.getFullYear() === currentYear;
-            });
+            const eventStartDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
+            const eventEndDate = event.endDate ? new Date(event.endDate) : null;
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
             
-            if (dayEvents.length === 0) {
-                dayEventsListElement.innerHTML = '<p>No hay eventos para este día.</p>';
-                return;
+            let contactInfoHtml = '';
+            if (event.contactId) {
+                const contact = contacts.find(c => c.id === event.contactId);
+                if (contact) {
+                    contactInfoHtml = `
+                        <h3>Información de Contacto</h3>
+                        <p><strong>Nombre:</strong> ${contact.name}</p>
+                        <p><strong>Email:</strong> ${contact.email || 'N/A'}</p>
+                        <p><strong>Teléfono:</strong> ${contact.phone ? `<a href="tel:${contact.phone}">${contact.phone}</a>` : 'N/A'}</p>
+                        <p><strong>Domicilio:</strong> ${contact.address || 'N/A'}</p>
+                    `;
+                }
             }
             
-            dayEvents.forEach(event => {
-                const eventElement = document.createElement('div');
-                eventElement.className = `event-item event-${event.type}`;
-                
-                const eventDate = new Date(event.date);
-                const options = { hour: '2-digit', minute: '2-digit' };
-                
-                let contactInfo = '';
-                if (event.contactId) {
-                    const contact = contacts.find(c => c.id === event.contactId);
-                    if (contact) {
-                        contactInfo = `<p><strong>Contacto:</strong> ${contact.name}</p>`;
-                    }
-                }
-                
-                eventElement.innerHTML = `
-                    <div>
-                        <strong>${event.title}</strong>
-                        <p>${eventDate.toLocaleTimeString('es-ES', options)}</p>
-                        <p>${event.description || 'Sin descripción'}</p>
-                        ${contactInfo}
-                    </div>
-                    <button class="delete-event" data-id="${event.id}">×</button>
-                `;
-                
-                dayEventsListElement.appendChild(eventElement);
-            });
+            eventDetailsContent.innerHTML = `
+                <h3>Detalles del Evento</h3>
+                <p><strong>Título:</strong> ${event.title}</p>
+                <p><strong>Fecha y Hora de Inicio:</strong> ${eventStartDate.toLocaleDateString('es-ES', options)}</p>
+                ${event.endDate ? `<p><strong>Fecha y Hora de Fin:</strong> ${eventEndDate.toLocaleDateString('es-ES', options)}</p>` : ''}
+                <p><strong>Tipo:</strong> ${event.type}</p>
+                <p><strong>Descripción:</strong> ${event.description || 'Sin descripción'}</p>
+                ${contactInfoHtml}
+            `;
             
-            // Añadir event listeners para eliminar eventos
-            document.querySelectorAll('.delete-event').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const id = e.target.dataset.id;
-                    deleteEvent(id);
-                });
-            });
+            document.getElementById('edit-event-btn').dataset.id = event.id;
+            openEventDetailsModal();
         }
 
-        // Comprobar notificaciones
+        function editEvent() {
+            const eventId = document.getElementById('edit-event-btn').dataset.id;
+            const eventToEdit = events.find(e => e.id === eventId);
+            if (!eventToEdit) return;
+            
+            eventIdInput.value = eventToEdit.id;
+            document.getElementById('modal-title').value = eventToEdit.title;
+            
+            const startDate = eventToEdit.startDate ? eventToEdit.startDate.substring(0, 16) : new Date(eventToEdit.date).toISOString().substring(0, 16);
+            const endDate = eventToEdit.endDate ? eventToEdit.endDate.substring(0, 16) : '';
+
+            startDateInput.value = startDate;
+            endDateInput.value = endDate;
+
+            document.getElementById('modal-type').value = eventToEdit.type;
+            document.getElementById('modal-description').value = eventToEdit.description;
+            document.getElementById('modal-contact').value = eventToEdit.contactId;
+
+            modalTitleH2.textContent = 'Editar Evento';
+            modalSaveEventBtn.textContent = 'Actualizar Evento';
+            
+            closeEventDetailsModal();
+            openEventModal();
+        }
+        
+        function printEventDetails() {
+            const printContent = document.getElementById('event-details-content').innerHTML;
+            const originalBody = document.body.innerHTML;
+            document.body.innerHTML = printContent;
+            window.print();
+            document.body.innerHTML = originalBody;
+            location.reload();
+        }
+
         function checkForNotifications() {
             const now = new Date();
             const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
             
             events.forEach(event => {
-                const eventDate = new Date(event.date);
+                const eventStartDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
                 
-                // Si el evento está dentro de una hora y aún no se ha notificado
-                if (eventDate > now && eventDate <= oneHourFromNow && !event.notified) {
+                if (eventStartDate > now && eventStartDate <= oneHourFromNow && !event.notified) {
                     showNotification(event);
-                    // Marcar como notificado en Firebase
                     db.collection('users').doc(currentUser.uid).collection('events').doc(event.id).update({
                         notified: true
                     }).catch(error => {
@@ -923,9 +988,8 @@
             });
         }
 
-        // Mostrar notificación
         function showNotification(event) {
-            const eventDate = new Date(event.date);
+            const eventStartDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
             const options = { 
                 year: 'numeric', 
                 month: 'short', 
@@ -935,19 +999,17 @@
             };
             
             notificationTitleElement.textContent = `Recordatorio: ${event.title}`;
-            notificationMessageElement.textContent = `Tu ${event.type} está programado para ${eventDate.toLocaleDateString('es-ES', options)}`;
+            notificationMessageElement.textContent = `Tu ${event.type} está programado para ${eventStartDate.toLocaleDateString('es-ES', options)}`;
             
             notificationElement.style.display = 'block';
             
-            // Ocultar la notificación después de 10 segundos
             setTimeout(() => {
                 notificationElement.style.display = 'none';
             }, 10000);
         }
 
-        // Iniciar comprobador de notificaciones
         function startNotificationChecker() {
-            notificationCheckInterval = setInterval(checkForNotifications, 60000); // Comprobar cada minuto
+            notificationCheckInterval = setInterval(checkForNotifications, 60000);
         }
     </script>
 </body>
