@@ -327,6 +327,13 @@
             background: var(--primary-color);
             color: white;
         }
+        
+        .contact-pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
 
         @media (max-width: 768px) {
             .container {
@@ -373,6 +380,7 @@
 
                     <div class="contact-list" id="contact-list">
                     </div>
+                    <div class="contact-pagination" id="contact-pagination"></div>
                 </div>
             </div>
 
@@ -504,12 +512,15 @@
         let notificationCheckInterval;
         let selectedDates = {};
         let monthlyEventsPage = 0;
+        let contactsPage = 0;
         const EVENTS_PER_PAGE = 5;
+        const CONTACTS_PER_PAGE = 5;
 
         const currentDateElement = document.getElementById('current-date');
         const currentMonthElement = document.getElementById('current-month');
         const calendarElement = document.getElementById('calendar');
         const contactListElement = document.getElementById('contact-list');
+        const contactPaginationElement = document.getElementById('contact-pagination');
         const contactSelectElement = document.getElementById('modal-contact');
         const monthlyEventsListElement = document.getElementById('monthly-events-list');
         const monthlyPaginationElement = document.getElementById('monthly-pagination');
@@ -846,9 +857,18 @@
 
         function renderContacts() {
             contactListElement.innerHTML = '';
-            if (contacts.length === 0) { contactListElement.innerHTML = '<p>No hay contactos guardados.</p>'; return; }
+            contactPaginationElement.innerHTML = '';
+
+            if (contacts.length === 0) { 
+                contactListElement.innerHTML = '<p>No hay contactos guardados.</p>'; 
+                return; 
+            }
             
-            contacts.forEach(contact => {
+            const start = contactsPage * CONTACTS_PER_PAGE;
+            const end = start + CONTACTS_PER_PAGE;
+            const paginatedContacts = contacts.slice(start, end);
+
+            paginatedContacts.forEach(contact => {
                 const contactElement = document.createElement('div');
                 contactElement.className = 'contact-item';
                 const phoneHtml = contact.phone ? `<a href="tel:${contact.phone}" class="phone-link">${contact.phone}</a>` : 'Sin teléfono';
@@ -866,6 +886,31 @@
                 `;
                 contactListElement.appendChild(contactElement);
             });
+
+            const totalPages = Math.ceil(contacts.length / CONTACTS_PER_PAGE);
+            if (totalPages > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.textContent = '← Anterior';
+                prevButton.disabled = contactsPage === 0;
+                prevButton.addEventListener('click', () => {
+                    contactsPage--;
+                    renderContacts();
+                });
+                contactPaginationElement.appendChild(prevButton);
+
+                const pageIndicator = document.createElement('span');
+                pageIndicator.textContent = `Página ${contactsPage + 1} de ${totalPages}`;
+                contactPaginationElement.appendChild(pageIndicator);
+
+                const nextButton = document.createElement('button');
+                nextButton.textContent = 'Siguiente →';
+                nextButton.disabled = contactsPage === totalPages - 1;
+                nextButton.addEventListener('click', () => {
+                    contactsPage++;
+                    renderContacts();
+                });
+                contactPaginationElement.appendChild(nextButton);
+            }
             
             document.querySelectorAll('.delete-contact').forEach(button => {
                 button.addEventListener('click', (e) => { deleteContact(e.target.dataset.id); });
