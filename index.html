@@ -3,489 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda</title>
+    <title>ProAgenda - Calendario Profesional</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #6a11cb;
-            --secondary-color: #2575fc;
-            --task-color: #ff9966;
-            --meeting-color: #00cdac;
-            --interview-color: #ff5e62;
-            --event-color: #a8ff78;
-            --hearing-color: #a18cd1;
-            --contact-color: #c2e9fb;
-            --light-bg: #f8f9fa;
-            --dark-text: #333;
-            --light-text: #fff;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --blue-event-color: #2980B9;
+            --primary: #6a11cb; --secondary: #2575fc;
+            --accent: #3498db; --success: #27ae60;
+            --danger: #e74c3c; --warning: #f1c40f;
+            --light: #f8f9fa; --white: #ffffff;
+            --border: #dee2e6; --shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; color: #333; display: flex; min-height: 100vh; }
 
-        body {
-            background: linear-gradient(135deg, #E0F7FA 0%, #CFD8DC 100%);
-            color: var(--dark-text);
-            min-height: 100vh;
-            padding: 20px;
-        }
+        /* Sidebar */
+        .sidebar { width: 300px; background: var(--white); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .sidebar h2 { font-size: 1.1rem; border-bottom: 2px solid var(--light); padding-bottom: 10px; color: var(--primary); }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
-        }
+        /* Main Content */
+        .main-content { flex: 1; padding: 25px; display: flex; flex-direction: column; }
+        header { display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); }
 
-        header {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* Calendario */
+        .calendar-container { background: var(--white); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); flex-grow: 1; }
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 2px; 
+            background-color: var(--border); 
+            border: 1px solid var(--border);
         }
-
-        h1 {
-            color: var(--primary-color);
-            margin-bottom: 10px;
+        .weekday { 
+            background-color: var(--secondary); 
+            color: white; 
+            text-align: center; 
+            padding: 12px; 
+            font-weight: bold; 
+            font-size: 0.9rem;
         }
-
-        .current-date {
-            font-size: 1.2rem;
-            color: var(--secondary-color);
-        }
-
-        .panel {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: var(--shadow);
-        }
-
-        .left-panel {
+        .day { 
+            background-color: var(--white); 
+            min-height: 110px; 
+            padding: 8px; 
+            cursor: pointer; 
+            position: relative;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            align-items: flex-end;
+            transition: all 0.2s;
         }
-
-        h2 {
-            margin-bottom: 15px;
-            color: var(--primary-color);
-            border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 5px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-
-        button {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
-        .calendar {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            margin-top: 15px;
-        }
-
-        .calendar-header {
-            grid-column: 1 / -1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .weekday {
-            text-align: center;
-            font-weight: bold;
-            padding: 10px;
-            background-color: var(--secondary-color);
-            color: white;
-            border-radius: 5px;
-        }
-
-        .day {
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #f0f0f0;
-            transition: all 0.2s ease;
-        }
-
-        .day:hover {
-            background-color: #e0e0e0;
-        }
-
-        .current-day {
-            background-color: var(--secondary-color);
-            color: white;
-        }
+        .day:hover { background-color: #f1f7ff; }
+        .day.today { background-color: #fff9db; border: 2px solid var(--warning); }
+        .day.selected { background-color: #e8f0fe; border: 2px solid var(--secondary); z-index: 10; }
+        .day.empty { background-color: #fafafa; cursor: default; }
+        .day span.day-number { font-weight: bold; color: #666; }
         
-        .selected-day {
-            background-color: var(--primary-color);
-            color: white;
-        }
+        .event-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; margin-top: 5px; align-self: center; }
 
-        .has-event {
-            position: relative;
-        }
-
-        .has-event::after {
-            content: "";
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            width: 8px;
-            height: 8px;
-            background-color: red;
-            border-radius: 50%;
-        }
-
-        .event-item {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .event-task {
-            background: linear-gradient(to right, var(--task-color), #ffcc66);
-        }
-
-        .event-meeting {
-            background: linear-gradient(to right, var(--meeting-color), #00d2ff);
-        }
-
-        .event-interview {
-            background: linear-gradient(to right, var(--interview-color), #ff9966);
-        }
-
-        .event-event {
-            background-color: var(--blue-event-color);
-        }
-
-        .event-hearing {
-            background: linear-gradient(to right, var(--hearing-color), #fbc2eb);
-        }
-
-        .contact-list {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .contact-item {
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: var(--contact-color);
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .contact-item .actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .contact-item .actions button {
-            padding: 5px 10px;
-            font-size: 0.8rem;
-        }
-
-        .phone-link {
-            color: var(--secondary-color);
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .phone-link:hover {
-            text-decoration: underline;
-        }
-
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            color: white;
-            background: linear-gradient(to right, #ff5e62, #ff9966);
-            box-shadow: var(--shadow);
-            display: none;
-            z-index: 1000;
-            max-width: 300px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
+        /* Botones y UI */
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; }
+        .btn-warning { background: var(--warning); color: #333; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { border: 1px solid var(--border); background: transparent; }
         
-        .modal-content {
-            background-color: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
+        .contact-card, .event-side-card { background: var(--light); padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; border-left: 4px solid var(--secondary); }
+        .event-side-card { border-left-color: var(--danger); cursor: pointer; }
+        .event-side-card:hover { background: #eee; }
 
-        .close-modal {
-            float: right;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .add-event-btn {
-            margin-top: 20px;
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 10px;
-        }
-
-        .pagination button {
-            background: none;
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-        }
-
-        .pagination button.active {
-            background: var(--primary-color);
-            color: white;
-        }
+        /* Modales */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; position: relative; max-height: 90vh; overflow-y: auto; }
         
-        .contact-pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 15px;
-            gap: 10px;
+        .delete-alert-content { 
+            background: white; padding: 20px; border-radius: 10px; width: 320px; 
+            text-align: center; border-top: 6px solid var(--danger);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-        }
+        .close-modal { position: absolute; top: 15px; right: 15px; font-size: 1.5rem; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+
+        .outlook-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .outlook-table th, .outlook-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--light); font-size: 0.9rem; }
     </style>
-    
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-    <div id="app-section">
-        <div class="container">
-            <header>
-                <div>
-                    <h1>Agenda para hoy:</h1>
-                    <div class="current-date" id="current-date"></div>
-                </div>
-            </header>
 
-            <div class="left-panel">
-                <div class="panel">
-                    <h2>Acciones Rápidas</h2>
-                    <button id="open-event-modal" class="add-event-btn">+ Nuevo Evento</button>
-                </div>
+    <aside class="sidebar">
+        <div style="text-align: center;">
+            <h1 style="font-size: 1.3rem; margin-top: 10px;">Agenda Defensor Oficial</h1>
+        </div>
+        
+        <button class="btn btn-primary" onclick="openEventModal()" style="width: 100%;"><i class="fas fa-plus"></i> Nuevo Evento</button>
+        <button class="btn btn-warning" onclick="openOutlook()" style="width: 100%;"><i class="fas fa-bolt"></i> Próximos 3 Días</button>
 
-                <div class="panel">
-                    <h2>Libreta de Contactos</h2>
-                    <div class="form-group">
-                        <input type="text" id="contact-name" placeholder="Nombre">
-                    </div>
-                    <div class="form-group">
-                        <input type="email" id="contact-email" placeholder="Email">
-                    </div>
-                    <div class="form-group">
-                        <input type="tel" id="contact-phone" placeholder="Teléfono">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="contact-address" placeholder="Domicilio">
-                    </div>
-                    <button id="save-contact">Guardar Contacto</button>
+        <hr style="border: 0; border-top: 1px solid var(--border);">
+        
+        <h2><i class="fas fa-address-book"></i> Contactos</h2>
+        <div id="contact-list" style="max-height: 200px; overflow-y: auto;"></div>
+        <button class="btn btn-outline" onclick="openContactModal()" style="width: 100%; font-size: 0.8rem;">+ Añadir Contacto</button>
 
-                    <div class="contact-list" id="contact-list">
-                    </div>
-                    <div class="contact-pagination" id="contact-pagination"></div>
-                </div>
+        <hr style="border: 0; border-top: 1px solid var(--border); margin-top: 10px;">
+        <h2 id="selected-date-title"><i class="fas fa-calendar-day"></i> Eventos del día</h2>
+        <div id="selected-day-events" style="flex-grow: 1; overflow-y: auto; background: var(--light); border-radius: 8px; padding: 10px;">
+            <p style="color: #999; text-align: center; font-size: 0.8rem; margin-top: 20px;">Selecciona un día en el calendario.</p>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <div>
+                <h2 id="current-month-label">Mes Año</h2>
+                <p id="today-date-label" style="color: #888; font-size: 0.85rem;"></p>
             </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline" onclick="moveMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                <button class="btn btn-outline" onclick="goToday()">Hoy</button>
+                <button class="btn btn-outline" onclick="moveMonth(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </header>
 
-            <div class="panel">
-                <h2>Calendario</h2>
-                <div class="calendar-header">
-                    <button id="prev-month">←</button>
-                    <h3 id="current-month"></h3>
-                    <button id="next-month">→</button>
-                </div>
-                <div class="calendar" id="calendar">
-                </div>
+        <div class="calendar-container">
+            <div id="calendar-grid" class="calendar-grid"></div>
+        </div>
+    </main>
 
-                <div id="monthly-events" style="margin-top: 20px;">
-                    <h3>Eventos del Mes</h3>
-                    <div id="monthly-events-list"></div>
-                    <div class="pagination" id="monthly-pagination"></div>
-                </div>
+    <div id="event-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('event-modal')">&times;</span>
+            <h2 id="event-modal-title">Evento</h2><br>
+            <input type="hidden" id="event-id">
+            <div class="form-group">
+                <label>Título</label>
+                <input type="text" id="ev-title">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Inicio</label><input type="datetime-local" id="ev-startDate"></div>
+                <div class="form-group"><label>Fin</label><input type="datetime-local" id="ev-endDate"></div>
+            </div>
+            <div class="form-group">
+                <label>Vincular Contacto</label>
+                <select id="ev-contact"></select>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="ev-description" rows="3"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="saveEvent()" style="flex: 1;">Guardar Cambios</button>
+                <button id="btn-delete-event" class="btn btn-outline" style="color: var(--danger); display: none;" onclick="confirmDelete('event')">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
+    </div>
 
-        <div id="event-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-modal" id="close-event-modal">&times;</span>
-                <h2 id="modal-title-h2">Nuevo Evento</h2>
-                <input type="hidden" id="event-id">
-                <div class="form-group">
-                    <label for="modal-title">Título del evento</label>
-                    <input type="text" id="modal-title" placeholder="Ej: Llamar a cliente">
-                </div>
-                <div class="form-group">
-                    <label for="modal-start-date">Fecha y hora de inicio</label>
-                    <input type="datetime-local" id="modal-start-date">
-                </div>
-                <div class="form-group">
-                    <label for="modal-end-date">Fecha y hora de fin</label>
-                    <input type="datetime-local" id="modal-end-date">
-                </div>
-                <div class="form-group">
-                    <label for="modal-type">Tipo de evento</label>
-                    <select id="modal-type">
-                        <option value="event">Evento</option>
-                        <option value="task">Tarea</option>
-                        <option value="meeting">Reunión</option>
-                        <option value="interview">Entrevista</option>
-                        <option value="hearing">Audiencia</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="modal-description">Descripción del evento</label>
-                    <textarea id="modal-description" rows="3" placeholder="Detalles del evento"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="modal-contact">Vincular un contacto (opcional)</label>
-                    <select id="modal-contact">
-                        <option value="">Seleccionar contacto</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <input type="checkbox" id="exclude-weekends">
-                    <label for="exclude-weekends" style="display: inline-block;">No marcar sábados o domingos</label>
-                </div>
-                <button id="modal-save-event">Guardar Evento</button>
-            </div>
+    <div id="contact-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-modal" onclick="closeModal('contact-modal')">&times;</span>
+            <h2 id="contact-modal-title">Contacto</h2><br>
+            <input type="hidden" id="contact-id">
+            <div class="form-group"><label>Nombre</label><input type="text" id="co-name"></div>
+            <div class="form-group"><label>Teléfono</label><input type="tel" id="co-phone"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="co-email"></div>
+            <div class="form-group"><label>Domicilio</label><input type="text" id="co-address"></div>
+            <button class="btn btn-primary" onclick="saveContact()" style="width: 100%;">Guardar Contacto</button>
         </div>
+    </div>
 
-        <div id="event-details-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-modal" id="close-details-modal">&times;</span>
-                <div id="event-details-content"></div>
-                <div class="modal-buttons">
-                    <button id="edit-event-btn">Editar</button>
-                    <button id="print-event-btn">Imprimir</button>
-                </div>
-            </div>
+    <div id="outlook-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="close-modal" onclick="closeModal('outlook-modal')">&times;</span>
+            <h2>Próximos 3 Días</h2><br>
+            <table class="outlook-table">
+                <thead><tr><th>Día</th><th>Hora</th><th>Asunto</th><th>Contacto</th></tr></thead>
+                <tbody id="outlook-body"></tbody>
+            </table>
         </div>
+    </div>
 
-        <div id="contact-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-modal" id="close-contact-modal">&times;</span>
-                <h2 id="contact-modal-h2">Editar Contacto</h2>
-                <input type="hidden" id="contact-id">
-                <div class="form-group">
-                    <label for="edit-contact-name">Nombre</label>
-                    <input type="text" id="edit-contact-name" placeholder="Nombre">
-                </div>
-                <div class="form-group">
-                    <label for="edit-contact-email">Email</label>
-                    <input type="email" id="edit-contact-email" placeholder="Email">
-                </div>
-                <div class="form-group">
-                    <label for="edit-contact-phone">Teléfono</label>
-                    <input type="tel" id="edit-contact-phone" placeholder="Teléfono">
-                </div>
-                <div class="form-group">
-                    <label for="edit-contact-address">Domicilio</label>
-                    <input type="text" id="edit-contact-address" placeholder="Domicilio">
-                </div>
-                <button id="modal-save-contact">Guardar Cambios</button>
+    <div id="delete-alert-modal" class="modal">
+        <div class="delete-alert-content">
+            <i class="fas fa-exclamation-triangle fa-2x" style="color: var(--danger); margin-bottom: 10px;"></i>
+            <h3 style="margin-bottom: 5px;">¿Eliminar registro?</h3>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Esta acción no se puede deshacer.</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn btn-outline" onclick="closeModal('delete-alert-modal')">Cancelar</button>
+                <button class="btn btn-danger" onclick="executeDeletion()">Eliminar</button>
             </div>
-        </div>
-
-        <div class="notification" id="notification">
-            <strong id="notification-title"></strong>
-            <p id="notification-message"></p>
         </div>
     </div>
 
@@ -498,563 +210,219 @@
             messagingSenderId: "861923763083",
             appId: "1:861923763083:web:ec9b30c50ce3fec057058e"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const auth = firebase.auth();
+        const mainRef = db.collection('users').doc('defaultUser');
 
-        let currentUser = { uid: "defaultUser" };
-        let currentDate = new Date();
-        let currentMonth = currentDate.getMonth();
-        let currentYear = currentDate.getFullYear();
         let events = [];
         let contacts = [];
-        let notificationCheckInterval;
-        let selectedDates = {};
-        let monthlyEventsPage = 0;
-        let contactsPage = 0;
-        const EVENTS_PER_PAGE = 5;
-        const CONTACTS_PER_PAGE = 5;
+        let viewDate = new Date();
+        let selectedDateStr = new Date().toLocaleDateString('en-CA'); // Hoy por defecto
+        let pendingDeleteId = null;
+        let pendingDeleteType = null;
 
-        const currentDateElement = document.getElementById('current-date');
-        const currentMonthElement = document.getElementById('current-month');
-        const calendarElement = document.getElementById('calendar');
-        const contactListElement = document.getElementById('contact-list');
-        const contactPaginationElement = document.getElementById('contact-pagination');
-        const contactSelectElement = document.getElementById('modal-contact');
-        const monthlyEventsListElement = document.getElementById('monthly-events-list');
-        const monthlyPaginationElement = document.getElementById('monthly-pagination');
-        const notificationElement = document.getElementById('notification');
-        const notificationTitleElement = document.getElementById('notification-title');
-        const notificationMessageElement = document.getElementById('notification-message');
-        const eventModal = document.getElementById('event-modal');
-        const eventDetailsModal = document.getElementById('event-details-modal');
-        const eventDetailsContent = document.getElementById('event-details-content');
-        const contactModal = document.getElementById('contact-modal');
-        
-        const modalTitleH2 = document.getElementById('modal-title-h2');
-        const modalSaveEventBtn = document.getElementById('modal-save-event');
-        const eventIdInput = document.getElementById('event-id');
-        const startDateInput = document.getElementById('modal-start-date');
-        const endDateInput = document.getElementById('modal-end-date');
-        const excludeWeekendsCheckbox = document.getElementById('exclude-weekends');
-
-        document.addEventListener('DOMContentLoaded', function() {
-            initApp();
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('today-date-label').innerText = new Date().toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+            loadFirebaseData();
         });
 
-        function initApp() {
-            loadEvents();
-            loadContacts();
-            
-            updateCurrentDate();
-            renderCalendar();
-            startNotificationChecker();
-
-            document.getElementById('prev-month').addEventListener('click', () => { changeMonth(-1); });
-            document.getElementById('next-month').addEventListener('click', () => { changeMonth(1); });
-            document.getElementById('save-contact').addEventListener('click', saveContact);
-            document.getElementById('open-event-modal').addEventListener('click', () => {
-                modalTitleH2.textContent = 'Nuevo Evento';
-                modalSaveEventBtn.textContent = 'Guardar Evento';
-                eventIdInput.value = '';
-                startDateInput.value = '';
-                endDateInput.value = '';
-                excludeWeekendsCheckbox.checked = false;
-                openEventModal();
+        function loadFirebaseData() {
+            mainRef.collection('contacts').orderBy('name', 'asc').onSnapshot(snap => {
+                contacts = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                renderSidebarContacts();
+                updateEventContactSelect();
             });
-            document.getElementById('modal-save-event').addEventListener('click', saveEvent);
-            document.getElementById('close-event-modal').addEventListener('click', closeEventModal);
-            document.getElementById('close-details-modal').addEventListener('click', closeEventDetailsModal);
-            document.getElementById('close-contact-modal').addEventListener('click', closeContactModal);
-            document.getElementById('modal-save-contact').addEventListener('click', saveEditedContact);
-            document.getElementById('print-event-btn').addEventListener('click', printEventDetails);
-            document.getElementById('edit-event-btn').addEventListener('click', editEvent);
-
-            window.addEventListener('click', (e) => {
-                if (e.target === eventModal) { closeEventModal(); }
-                if (e.target === eventDetailsModal) { closeEventDetailsModal(); }
-                if (e.target === contactModal) { closeContactModal(); }
+            mainRef.collection('events').orderBy('startDate', 'asc').onSnapshot(snap => {
+                events = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                renderCalendar();
+                renderSelectedDateEvents(); // Actualizar panel izquierdo
             });
         }
 
-        function openEventModal() { eventModal.style.display = 'flex'; }
-        function closeEventModal() { eventModal.style.display = 'none'; }
-        function openEventDetailsModal() { eventDetailsModal.style.display = 'flex'; }
-        function closeEventDetailsModal() { eventDetailsModal.style.display = 'none'; }
-        function openContactModal() { contactModal.style.display = 'flex'; }
-        function closeContactModal() { contactModal.style.display = 'none'; }
+        // --- RENDERIZADO DE EVENTOS EN PANEL IZQUIERDO ---
+        function renderSelectedDateEvents() {
+            const container = document.getElementById('selected-day-events');
+            const title = document.getElementById('selected-date-title');
+            
+            // Formatear fecha para el título
+            const dateObj = new Date(selectedDateStr + "T12:00:00");
+            const dateTxt = dateObj.toLocaleDateString('es-ES', { day:'numeric', month:'short' });
+            title.innerHTML = `<i class="fas fa-calendar-day"></i> Eventos (${dateTxt})`;
 
-        function updateCurrentDate() {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            currentDateElement.textContent = currentDate.toLocaleDateString('es-ES', options);
+            const filtered = events.filter(e => e.startDate && e.startDate.startsWith(selectedDateStr));
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; font-size: 0.8rem; margin-top: 20px;">No hay eventos para esta fecha.</p>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(e => {
+                const time = e.startDate ? e.startDate.split('T')[1] : '--:--';
+                return `
+                    <div class="event-side-card" onclick="openEventModal('${e.id}')">
+                        <div style="flex-grow: 1;">
+                            <strong>${e.title}</strong>
+                            <div style="font-size: 0.75rem; color: #666;">${time}</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color: #ccc; font-size: 0.7rem;"></i>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderCalendar() {
-            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            currentMonthElement.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            const month = viewDate.getMonth();
+            const year = viewDate.getFullYear();
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            document.getElementById('current-month-label').innerText = `${monthNames[month]} ${year}`;
 
-            calendarElement.innerHTML = '';
-            const weekdays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-            weekdays.forEach(day => {
-                const dayElement = document.createElement('div');
-                dayElement.className = 'weekday';
-                dayElement.textContent = day;
-                calendarElement.appendChild(dayElement);
+            ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].forEach(d => {
+                const h = document.createElement('div'); h.className = 'weekday'; h.innerText = d; grid.appendChild(h);
             });
 
-            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            const today = new Date();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
 
             for (let i = 0; i < firstDay; i++) {
-                const emptyDay = document.createElement('div');
-                emptyDay.className = 'day empty';
-                calendarElement.appendChild(emptyDay);
+                const e = document.createElement('div'); e.className = 'day empty'; grid.appendChild(e);
             }
 
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dayElement = document.createElement('div');
-                dayElement.className = 'day';
-                dayElement.textContent = day;
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            for (let d = 1; d <= daysInMonth; d++) {
+                const currentDay = new Date(year, month, d);
+                const currentStr = currentDay.toLocaleDateString('en-CA');
                 
-                const dayDate = new Date(currentYear, currentMonth, day);
-                const dayDateString = dayDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                
-                if (selectedDates[dayDateString]) {
-                    dayElement.classList.add('selected-day');
-                } else if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
-                    dayElement.classList.add('current-day');
-                }
+                const dayDiv = document.createElement('div');
+                dayDiv.className = `day ${currentStr === todayStr ? 'today' : ''} ${currentStr === selectedDateStr ? 'selected' : ''}`;
+                dayDiv.innerHTML = `<span class="day-number">${d}</span>`;
 
-                const hasEvent = events.some(event => {
-                    const eventDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
-                    if (!eventDate || isNaN(eventDate)) return false;
-                    const currentDayMs = new Date(currentYear, currentMonth, day).getTime();
-                    
-                    const eventStartMs = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()).getTime();
-                    const eventEndMs = event.endDate ? new Date(new Date(event.endDate).getFullYear(), new Date(event.endDate).getMonth(), new Date(event.endDate).getDate()).getTime() : eventStartMs;
-                    
-                    return currentDayMs >= eventStartMs && currentDayMs <= eventEndMs;
+                const dayEvents = events.filter(e => e.startDate && e.startDate.startsWith(currentStr));
+                dayEvents.forEach(ev => {
+                    const dot = document.createElement('div'); dot.className = 'event-dot'; dayDiv.appendChild(dot);
                 });
-                
-                if (hasEvent) {
-                    dayElement.classList.add('has-event');
-                }
 
-                dayElement.addEventListener('click', () => {
-                    if (selectedDates[dayDateString]) {
-                        delete selectedDates[dayDateString];
-                    } else {
-                        if (excludeWeekendsCheckbox.checked) {
-                            if (dayDate.getDay() === 0 || dayDate.getDay() === 6) {
-                                alert('No puedes seleccionar fines de semana con esta opción habilitada.');
-                                return;
-                            }
-                        }
-                        selectedDates[dayDateString] = true;
-                    }
-                    renderCalendar();
-                });
-                calendarElement.appendChild(dayElement);
+                dayDiv.onclick = () => {
+                    selectedDateStr = currentStr; // Actualizar fecha seleccionada
+                    renderCalendar();             // Refrescar vista calendario para resaltar
+                    renderSelectedDateEvents();   // Refrescar panel izquierdo
+                };
+                grid.appendChild(dayDiv);
             }
         }
 
-        function changeMonth(direction) {
-            currentMonth += direction;
-            selectedDates = {};
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            } else if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            monthlyEventsPage = 0;
-            renderCalendar();
-            renderMonthlyEvents();
-        }
+        function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
+        function goToday() { viewDate = new Date(); selectedDateStr = viewDate.toLocaleDateString('en-CA'); renderCalendar(); renderSelectedDateEvents(); }
 
-        function loadEvents() {
-            if (!currentUser) return;
-            
-            db.collection('users').doc(currentUser.uid).collection('events')
-                .orderBy('startDate', 'asc')
-                .onSnapshot(snapshot => {
-                    events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderCalendar();
-                    renderMonthlyEvents();
-                }, error => {
-                    console.error('Error cargando eventos:', error);
-                });
-        }
-
-        function saveEvent() {
-            if (!currentUser) { alert('Debe iniciar sesión para guardar eventos.'); return; }
-            
-            const eventId = eventIdInput.value;
-            const title = document.getElementById('modal-title').value;
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
-            const description = document.getElementById('modal-description').value;
-            const contactId = document.getElementById('modal-contact').value;
-            const type = document.getElementById('modal-type').value;
-
-            if (!title || !startDate) { alert('Por favor, complete al menos el título y la fecha de inicio.'); return; }
-            
-            const eventData = { title, startDate, endDate, description, contactId, type, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
-
-            if (eventId) {
-                db.collection('users').doc(currentUser.uid).collection('events').doc(eventId).update(eventData)
-                    .then(() => {
-                        alert('Evento actualizado correctamente.');
-                        closeEventModal();
-                    })
-                    .catch(error => { alert('Error al actualizar evento: ' + error.message); });
-            } else {
-                db.collection('users').doc(currentUser.uid).collection('events').add(eventData)
-                    .then(() => {
-                        alert('Evento guardado correctamente.');
-                        closeEventModal();
-                    })
-                    .catch(error => { alert('Error al guardar evento: ' + error.message); });
-            }
-            document.getElementById('modal-title').value = '';
-            startDateInput.value = '';
-            endDateInput.value = '';
-            document.getElementById('modal-description').value = '';
-            document.getElementById('modal-contact').value = '';
-        }
-
-        function deleteEvent(id) {
-            if (!currentUser) return;
-            
-            db.collection('users').doc(currentUser.uid).collection('events').doc(id).delete()
-                .catch(error => { console.error('Error al eliminar evento: ' + error.message); });
-        }
-
-        function renderMonthlyEvents() {
-            monthlyEventsListElement.innerHTML = '';
-            monthlyPaginationElement.innerHTML = '';
-            
-            const monthlyEvents = events.filter(event => {
-                const eventDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
-                return eventDate && eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
-            });
-            
-            if (monthlyEvents.length === 0) {
-                monthlyEventsListElement.innerHTML = '<p>No hay eventos para este mes.</p>';
-                return;
-            }
-            
-            const start = monthlyEventsPage * EVENTS_PER_PAGE;
-            const end = start + EVENTS_PER_PAGE;
-            const paginatedEvents = monthlyEvents.slice(start, end);
-            
-            paginatedEvents.forEach(event => {
-                const eventElement = document.createElement('div');
-                eventElement.className = `event-item event-${event.type}`;
-                eventElement.dataset.id = event.id;
-                
-                const eventStartDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
-                const eventEndDate = event.endDate ? new Date(event.endDate) : null;
-                
-                const startDateStr = eventStartDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                const endDateStr = eventEndDate ? eventEndDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-
-                eventElement.innerHTML = `
-                    <div>
-                        <strong>${event.title}</strong>
-                        <p>Inicio: ${startDateStr}</p>
-                        ${event.endDate ? `<p>Fin: ${endDateStr}</p>` : ''}
-                    </div>
-                    <button class="delete-event" data-id="${event.id}">×</button>
-                `;
-                eventElement.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('delete-event')) {
-                        deleteEvent(e.target.dataset.id);
-                    } else {
-                        showEventDetails(event.id);
-                    }
-                });
-                monthlyEventsListElement.appendChild(eventElement);
-            });
-            
-            const totalPages = Math.ceil(monthlyEvents.length / EVENTS_PER_PAGE);
-            for (let i = 0; i < totalPages; i++) {
-                const pageButton = document.createElement('button');
-                pageButton.textContent = i + 1;
-                pageButton.classList.toggle('active', i === monthlyEventsPage);
-                pageButton.addEventListener('click', () => {
-                    monthlyEventsPage = i;
-                    renderMonthlyEvents();
-                });
-                monthlyPaginationElement.appendChild(pageButton);
-            }
-        }
-
-        function loadContacts() {
-            if (!currentUser) return;
-            
-            db.collection('users').doc(currentUser.uid).collection('contacts')
-                .orderBy('name', 'asc')
-                .onSnapshot(snapshot => {
-                    contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderContacts();
-                    loadContactsToSelect();
-                }, error => {
-                    console.error('Error cargando contactos:', error);
-                });
-        }
-
-        function saveContact() {
-            if (!currentUser) { alert('Debe iniciar sesión para guardar contactos.'); return; }
-            
-            const name = document.getElementById('contact-name').value;
-            const email = document.getElementById('contact-email').value;
-            const phone = document.getElementById('contact-phone').value;
-            const address = document.getElementById('contact-address').value;
-
-            if (!name) { alert('Por favor, ingrese al menos un nombre.'); return; }
-
-            db.collection('users').doc(currentUser.uid).collection('contacts').add({
-                name, email, phone, address, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                document.getElementById('contact-name').value = '';
-                document.getElementById('contact-email').value = '';
-                document.getElementById('contact-phone').value = '';
-                document.getElementById('contact-address').value = '';
-                alert('Contacto guardado correctamente.');
-            })
-            .catch(error => { alert('Error al guardar contacto: ' + error.message); });
-        }
-
-        function saveEditedContact() {
-            const contactId = document.getElementById('contact-id').value;
-            const name = document.getElementById('edit-contact-name').value;
-            const email = document.getElementById('edit-contact-email').value;
-            const phone = document.getElementById('edit-contact-phone').value;
-            const address = document.getElementById('edit-contact-address').value;
-
-            if (!name) { alert('Por favor, ingrese al menos un nombre.'); return; }
-
-            db.collection('users').doc(currentUser.uid).collection('contacts').doc(contactId).update({
-                name, email, phone, address
-            })
-            .then(() => {
-                alert('Contacto actualizado correctamente.');
-                closeContactModal();
-            })
-            .catch(error => { alert('Error al actualizar contacto: ' + error.message); });
-        }
-
-        function deleteContact(id) {
-            if (!currentUser) return;
-            db.collection('users').doc(currentUser.uid).collection('contacts').doc(id).delete()
-                .catch(error => { console.error('Error al eliminar contacto: ' + error.message); });
-        }
-
-        function renderContacts() {
-            contactListElement.innerHTML = '';
-            contactPaginationElement.innerHTML = '';
-
-            if (contacts.length === 0) { 
-                contactListElement.innerHTML = '<p>No hay contactos guardados.</p>'; 
-                return; 
-            }
-            
-            const start = contactsPage * CONTACTS_PER_PAGE;
-            const end = start + CONTACTS_PER_PAGE;
-            const paginatedContacts = contacts.slice(start, end);
-
-            paginatedContacts.forEach(contact => {
-                const contactElement = document.createElement('div');
-                contactElement.className = 'contact-item';
-                const phoneHtml = contact.phone ? `<a href="tel:${contact.phone}" class="phone-link">${contact.phone}</a>` : 'Sin teléfono';
-                
-                contactElement.innerHTML = `
-                    <div>
-                        <strong>${contact.name}</strong>
-                        <p>${contact.email || 'Sin email'} | ${phoneHtml}</p>
-                        <p>${contact.address || 'Sin domicilio'}</p>
-                    </div>
-                    <div class="actions">
-                        <button class="edit-contact-btn" data-id="${contact.id}">Editar</button>
-                        <button class="delete-contact" data-id="${contact.id}">×</button>
-                    </div>
-                `;
-                contactListElement.appendChild(contactElement);
-            });
-
-            const totalPages = Math.ceil(contacts.length / CONTACTS_PER_PAGE);
-            if (totalPages > 1) {
-                const prevButton = document.createElement('button');
-                prevButton.textContent = '← Anterior';
-                prevButton.disabled = contactsPage === 0;
-                prevButton.addEventListener('click', () => {
-                    contactsPage--;
-                    renderContacts();
-                });
-                contactPaginationElement.appendChild(prevButton);
-
-                const pageIndicator = document.createElement('span');
-                pageIndicator.textContent = `Página ${contactsPage + 1} de ${totalPages}`;
-                contactPaginationElement.appendChild(pageIndicator);
-
-                const nextButton = document.createElement('button');
-                nextButton.textContent = 'Siguiente →';
-                nextButton.disabled = contactsPage === totalPages - 1;
-                nextButton.addEventListener('click', () => {
-                    contactsPage++;
-                    renderContacts();
-                });
-                contactPaginationElement.appendChild(nextButton);
-            }
-            
-            document.querySelectorAll('.delete-contact').forEach(button => {
-                button.addEventListener('click', (e) => { deleteContact(e.target.dataset.id); });
-            });
-
-            document.querySelectorAll('.edit-contact-btn').forEach(button => {
-                button.addEventListener('click', (e) => { editContact(e.target.dataset.id); });
-            });
-        }
-
-        function editContact(contactId) {
-            const contactToEdit = contacts.find(c => c.id === contactId);
-            if (!contactToEdit) return;
-
-            document.getElementById('contact-id').value = contactToEdit.id;
-            document.getElementById('edit-contact-name').value = contactToEdit.name;
-            document.getElementById('edit-contact-email').value = contactToEdit.email;
-            document.getElementById('edit-contact-phone').value = contactToEdit.phone;
-            document.getElementById('edit-contact-address').value = contactToEdit.address;
-
-            openContactModal();
-        }
-
-        function loadContactsToSelect() {
-            contactSelectElement.innerHTML = '<option value="">Seleccionar contacto</option>';
-            contacts.forEach(contact => {
-                const option = document.createElement('option');
-                option.value = contact.id;
-                option.textContent = contact.name;
-                contactSelectElement.appendChild(option);
-            });
-        }
-
-        function showEventDetails(eventId) {
-            const event = events.find(e => e.id === eventId);
-            if (!event) return;
-            
-            const eventStartDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
-            const eventEndDate = event.endDate ? new Date(event.endDate) : null;
-
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            
-            let contactInfoHtml = '';
-            if (event.contactId) {
-                const contact = contacts.find(c => c.id === event.contactId);
-                if (contact) {
-                    contactInfoHtml = `
-                        <h3>Información de Contacto</h3>
-                        <p><strong>Nombre:</strong> ${contact.name}</p>
-                        <p><strong>Email:</strong> ${contact.email || 'N/A'}</p>
-                        <p><strong>Teléfono:</strong> ${contact.phone ? `<a href="tel:${contact.phone}">${contact.phone}</a>` : 'N/A'}</p>
-                        <p><strong>Domicilio:</strong> ${contact.address || 'N/A'}</p>
-                    `;
-                }
-            }
-            
-            eventDetailsContent.innerHTML = `
-                <h3>Detalles del Evento</h3>
-                <p><strong>Título:</strong> ${event.title}</p>
-                <p><strong>Fecha y Hora de Inicio:</strong> ${eventStartDate.toLocaleDateString('es-ES', options)}</p>
-                ${event.endDate ? `<p><strong>Fecha y Hora de Fin:</strong> ${eventEndDate.toLocaleDateString('es-ES', options)}</p>` : ''}
-                <p><strong>Tipo:</strong> ${event.type}</p>
-                <p><strong>Descripción:</strong> ${event.description || 'Sin descripción'}</p>
-                ${contactInfoHtml}
-            `;
-            
-            document.getElementById('edit-event-btn').dataset.id = event.id;
-            openEventDetailsModal();
-        }
-
-        function editEvent() {
-            const eventId = document.getElementById('edit-event-btn').dataset.id;
-            const eventToEdit = events.find(e => e.id === eventId);
-            if (!eventToEdit) return;
-            
-            eventIdInput.value = eventToEdit.id;
-            document.getElementById('modal-title').value = eventToEdit.title;
-            
-            const startDate = eventToEdit.startDate ? eventToEdit.startDate.substring(0, 16) : new Date(eventToEdit.date).toISOString().substring(0, 16);
-            const endDate = eventToEdit.endDate ? eventToEdit.endDate.substring(0, 16) : '';
-
-            startDateInput.value = startDate;
-            endDateInput.value = endDate;
-
-            document.getElementById('modal-type').value = eventToEdit.type;
-            document.getElementById('modal-description').value = eventToEdit.description;
-            document.getElementById('modal-contact').value = eventToEdit.contactId;
-
-            modalTitleH2.textContent = 'Editar Evento';
-            modalSaveEventBtn.textContent = 'Actualizar Evento';
-            
-            closeEventDetailsModal();
-            openEventModal();
-        }
-        
-        function printEventDetails() {
-            const printContent = document.getElementById('event-details-content').innerHTML;
-            const originalBody = document.body.innerHTML;
-            document.body.innerHTML = printContent;
-            window.print();
-            document.body.innerHTML = originalBody;
-            location.reload();
-        }
-
-        function checkForNotifications() {
-            const now = new Date();
-            const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-            
-            events.forEach(event => {
-                const eventStartDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
-                
-                if (eventStartDate > now && eventStartDate <= oneHourFromNow && !event.notified) {
-                    showNotification(event);
-                    db.collection('users').doc(currentUser.uid).collection('events').doc(event.id).update({
-                        notified: true
-                    }).catch(error => {
-                        console.error('Error marcando evento como notificado:', error);
-                    });
-                }
-            });
-        }
-
-        function showNotification(event) {
-            const eventStartDate = event.startDate ? new Date(event.startDate) : new Date(event.date);
-            const options = { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit' 
+        // --- CRUD EVENTOS ---
+        async function saveEvent() {
+            const id = document.getElementById('event-id').value;
+            const data = {
+                title: document.getElementById('ev-title').value,
+                startDate: document.getElementById('ev-startDate').value,
+                endDate: document.getElementById('ev-endDate').value,
+                contactId: document.getElementById('ev-contact').value,
+                description: document.getElementById('ev-description').value,
+                type: 'event'
             };
-            
-            notificationTitleElement.textContent = `Recordatorio: ${event.title}`;
-            notificationMessageElement.textContent = `Tu ${event.type} está programado para ${eventStartDate.toLocaleDateString('es-ES', options)}`;
-            
-            notificationElement.style.display = 'block';
-            
-            setTimeout(() => {
-                notificationElement.style.display = 'none';
-            }, 10000);
+            if(!data.title || !data.startDate) return;
+            if(id) await mainRef.collection('events').doc(id).update(data);
+            else await mainRef.collection('events').add(data);
+            closeModal('event-modal');
         }
 
-        function startNotificationChecker() {
-            notificationCheckInterval = setInterval(checkForNotifications, 60000);
+        function openEventModal(id = null, start = '') {
+            document.getElementById('event-id').value = id || '';
+            document.getElementById('btn-delete-event').style.display = id ? 'block' : 'none';
+            if(id) {
+                const e = events.find(x => x.id === id);
+                document.getElementById('ev-title').value = e.title;
+                document.getElementById('ev-startDate').value = e.startDate || '';
+                document.getElementById('ev-endDate').value = e.endDate || '';
+                document.getElementById('ev-contact').value = e.contactId || '';
+                document.getElementById('ev-description').value = e.description || '';
+            } else {
+                document.querySelectorAll('#event-modal input, #event-modal textarea').forEach(i => i.value = '');
+                document.getElementById('ev-startDate').value = start || (selectedDateStr + "T09:00");
+                document.getElementById('ev-contact').value = '';
+            }
+            document.getElementById('event-modal').style.display = 'flex';
+        }
+
+        // --- CRUD CONTACTOS ---
+        async function saveContact() {
+            const id = document.getElementById('contact-id').value;
+            const data = { 
+                name: document.getElementById('co-name').value, 
+                phone: document.getElementById('co-phone').value,
+                email: document.getElementById('co-email').value,
+                address: document.getElementById('co-address').value
+            };
+            if(!data.name) return;
+            if(id) await mainRef.collection('contacts').doc(id).update(data);
+            else await mainRef.collection('contacts').add(data);
+            closeModal('contact-modal');
+        }
+
+        function openContactModal(id = null) {
+            document.getElementById('contact-id').value = id || '';
+            if(id) {
+                const c = contacts.find(x => x.id === id);
+                document.getElementById('co-name').value = c.name;
+                document.getElementById('co-phone').value = c.phone || '';
+                document.getElementById('co-email').value = c.email || '';
+                document.getElementById('co-address').value = c.address || '';
+            } else {
+                document.querySelectorAll('#contact-modal input').forEach(i => i.value = '');
+            }
+            document.getElementById('contact-modal').style.display = 'flex';
+        }
+
+        function renderSidebarContacts() {
+            const list = document.getElementById('contact-list');
+            list.innerHTML = contacts.map(c => `
+                <div class="contact-card">
+                    <span onclick="openContactModal('${c.id}')" style="cursor:pointer; font-weight:600;">${c.name}</span>
+                    <button style="border:none; background:none; color:var(--danger); cursor:pointer;" onclick="confirmDelete('contact', '${c.id}')"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `).join('');
+        }
+
+        // --- ELIMINACIÓN ---
+        function confirmDelete(type, id = null) {
+            pendingDeleteType = type;
+            pendingDeleteId = id || document.getElementById('event-id').value;
+            document.getElementById('delete-alert-modal').style.display = 'flex';
+        }
+
+        async function executeDeletion() {
+            if (pendingDeleteType === 'event') await mainRef.collection('events').doc(pendingDeleteId).delete();
+            else if (pendingDeleteType === 'contact') await mainRef.collection('contacts').doc(pendingDeleteId).delete();
+            closeModal('delete-alert-modal');
+            closeModal('event-modal');
+        }
+
+        function openOutlook() {
+            const body = document.getElementById('outlook-body');
+            body.innerHTML = '';
+            const now = new Date();
+            const limit = new Date(); limit.setDate(now.getDate() + 3);
+            const upcoming = events.filter(e => {
+                const d = new Date(e.startDate); return d >= now && d <= limit;
+            }).sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+
+            upcoming.forEach(e => {
+                const d = new Date(e.startDate); const c = contacts.find(x => x.id === e.contactId);
+                body.innerHTML += `<tr><td>${d.toLocaleDateString('es-ES', {weekday:'short', day:'numeric'})}</td><td>${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td><td>${e.title}</td><td>${c ? c.name : '---'}</td></tr>`;
+            });
+            document.getElementById('outlook-modal').style.display = 'flex';
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function updateEventContactSelect() {
+            const sel = document.getElementById('ev-contact');
+            sel.innerHTML = '<option value="">Seleccionar contacto</option>' + contacts.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
         }
     </script>
 </body>
