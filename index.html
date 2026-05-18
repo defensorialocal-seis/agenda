@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda Defensor Oficial</title>
+    <title>Agenda Defensor Oficial | Vista con títulos en cada fecha</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #6a11cb; --secondary: #2575fc;
-            --accent: #3498db; --success: #27ae60;
-            --danger: #e74c3c; --warning: #f1c40f;
-            --light: #f8f9fa; --white: #ffffff;
-            --border: #dee2e6; --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --primary: #6a11cb; 
+            --secondary: #2575fc;
+            --accent: #3498db; 
+            --success: #27ae60;
+            --danger: #e74c3c; 
+            --warning: #f1c40f;
+            --light: #f8f9fa; 
+            --white: #ffffff;
+            --border: #dee2e6; 
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --event-bg-light: rgba(173, 216, 230, 0.55);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -44,22 +50,101 @@
         }
         .day { 
             background-color: var(--white); 
-            min-height: 110px; 
-            padding: 8px; 
+            min-height: 130px; 
+            padding: 6px 6px 4px 6px; 
             cursor: pointer; 
             position: relative;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: stretch;
             transition: all 0.2s;
+            overflow-y: auto;
+        }
+        /* Relleno de evento con color celeste */
+        .day.has-event-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--event-bg-light);
+            z-index: 0;
+            pointer-events: none;
+            border-radius: 2px;
+        }
+        /* Capa de contenido por encima del relleno */
+        .day .day-number,
+        .day .event-dot,
+        .day .event-titles,
+        .day > * {
+            position: relative;
+            z-index: 2;
         }
         .day:hover { background-color: #f1f7ff; }
         .day.today { background-color: #fff9db; border: 2px solid var(--warning); }
         .day.selected { background-color: #e8f0fe; border: 2px solid var(--secondary); z-index: 10; }
+        .day.selected.has-event-bg::after {
+            background-color: rgba(100, 180, 240, 0.4);
+        }
+        .day.today.has-event-bg::after {
+            background-color: rgba(240, 200, 100, 0.25);
+        }
         .day.empty { background-color: #fafafa; cursor: default; }
-        .day span.day-number { font-weight: bold; color: #666; }
         
-        .event-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; margin-top: 5px; align-self: center; }
+        .day-number { 
+            font-weight: bold; 
+            color: #2c3e50; 
+            text-align: right; 
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+        
+        /* Contenedor de títulos de eventos dentro de la celda */
+        .event-titles {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-top: 4px;
+            width: 100%;
+        }
+        .event-title-item {
+            font-size: 0.7rem;
+            background: rgba(255,255,240,0.85);
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: #1e4668;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-left: 2px solid var(--danger);
+            line-height: 1.2;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .event-title-item:hover {
+            background: #ffe0b5;
+            text-decoration: underline;
+        }
+        .more-events {
+            font-size: 0.65rem;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 2px;
+            padding-left: 4px;
+        }
+        
+        .event-dot { 
+            width: 8px; 
+            height: 8px; 
+            background: var(--danger); 
+            border-radius: 50%; 
+            margin-top: 5px; 
+            align-self: flex-end;
+            box-shadow: 0 0 2px rgba(0,0,0,0.2);
+        }
 
         /* Botones y UI */
         .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
@@ -129,7 +214,7 @@
             <input type="hidden" id="event-id">
             <div class="form-group">
                 <label>Título</label>
-                <input type="text" id="ev-title">
+                <input type="text" id="ev-title" placeholder="Audiencia, reunión, plazo...">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-group"><label>Inicio</label><input type="datetime-local" id="ev-startDate"></div>
@@ -137,10 +222,11 @@
             </div>
             <div class="form-group">
                 <label>Descripción</label>
-                <textarea id="ev-description" rows="3"></textarea>
+                <textarea id="ev-description" rows="3" placeholder="Detalles del evento..."></textarea>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button class="btn btn-primary" onclick="saveEvent()" style="flex: 1;">Guardar Cambios</button>
+                <button class="btn btn-danger" onclick="deleteEvent()" id="btn-delete-event" style="display: none;">Eliminar</button>
             </div>
         </div>
     </div>
@@ -150,13 +236,14 @@
             <span class="close-modal" onclick="closeModal('outlook-modal')">&times;</span>
             <h2>Próximos 3 Días</h2><br>
             <table class="outlook-table">
-                <thead><tr><th>Día</th><th>Hora</th><th>Asunto</th></tr></thead>
+                <thead> bon<th>Día</th><th>Hora</th><th>Asunto</th></tr></thead>
                 <tbody id="outlook-body"></tbody>
             </table>
         </div>
     </div>
 
     <script>
+        // Configuración Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBZZOjKInC-GpNvhyRSXWs3x6w_JQ7TtuU",
             authDomain: "agendatareas6.firebaseapp.com",
@@ -173,139 +260,397 @@
         let viewDate = new Date();
         let selectedDateStr = new Date().toLocaleDateString('en-CA'); 
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('today-date-label').innerText = new Date().toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-            loadFirebaseData();
-        });
+        // ========== LÓGICA DE RANGO DE FECHAS ==========
+        function eventCoversDate(event, dateStr) {
+            if (!event.startDate) return false;
+            const startDateOnly = event.startDate.split('T')[0];
+            let endDateOnly = startDateOnly;
+            if (event.endDate && event.endDate.trim() !== "") {
+                endDateOnly = event.endDate.split('T')[0];
+            }
+            if (endDateOnly < startDateOnly) endDateOnly = startDateOnly;
+            return (dateStr >= startDateOnly && dateStr <= endDateOnly);
+        }
 
+        function getEventsForDate(dateStr) {
+            return events.filter(ev => eventCoversDate(ev, dateStr));
+        }
+
+        function dateHasAnyEvent(dateStr) {
+            return getEventsForDate(dateStr).length > 0;
+        }
+
+        // Obtener títulos únicos (para mostrar en la celda)
+        function getEventTitlesForDate(dateStr, maxToShow = 2) {
+            const evs = getEventsForDate(dateStr);
+            // Ordenar por fecha de inicio para consistencia
+            evs.sort((a,b) => (a.startDate || "").localeCompare(b.startDate || ""));
+            const titles = evs.map(ev => ev.title || "Sin título");
+            // Eliminar duplicados (si dos eventos tienen mismo título, se muestran igual, pero puede ser útil conservar)
+            const unique = [];
+            for (let t of titles) {
+                if (!unique.includes(t)) unique.push(t);
+            }
+            if (unique.length <= maxToShow) return { titles: unique, remaining: 0 };
+            return { titles: unique.slice(0, maxToShow), remaining: unique.length - maxToShow };
+        }
+
+        // ========== CARGA DE DATOS ==========
         function loadFirebaseData() {
             mainRef.collection('events').orderBy('startDate', 'asc').onSnapshot(snap => {
-                events = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                events = snap.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        title: data.title || "Sin título",
+                        startDate: data.startDate || "",
+                        endDate: data.endDate || "",
+                        description: data.description || "",
+                        type: data.type || "event"
+                    };
+                });
                 renderCalendar();
                 renderSelectedDateEvents();
+            }, error => {
+                console.error("Error cargando eventos: ", error);
             });
         }
 
+        // ========== RENDER DEL CALENDARIO CON TÍTULOS EN CADA DÍA ==========
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            const month = viewDate.getMonth();
+            const year = viewDate.getFullYear();
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            document.getElementById('current-month-label').innerText = `${monthNames[month]} ${year}`;
+
+            // Días de la semana
+            const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            weekDays.forEach(day => {
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'weekday';
+                headerDiv.innerText = day;
+                grid.appendChild(headerDiv);
+            });
+
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Celdas vacías
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'day empty';
+                grid.appendChild(emptyDiv);
+            }
+
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                const currentDate = new Date(year, month, d);
+                const currentStr = currentDate.toLocaleDateString('en-CA');
+                
+                const dayDiv = document.createElement('div');
+                let classNames = 'day';
+                if (currentStr === todayStr) classNames += ' today';
+                if (currentStr === selectedDateStr) classNames += ' selected';
+                if (dateHasAnyEvent(currentStr)) classNames += ' has-event-bg';
+                
+                dayDiv.className = classNames;
+                
+                // Número del día (a la derecha)
+                const numberSpan = document.createElement('span');
+                numberSpan.className = 'day-number';
+                numberSpan.innerText = d;
+                dayDiv.appendChild(numberSpan);
+                
+                // --- Mostrar títulos de eventos (referencia textual) ---
+                const { titles, remaining } = getEventTitlesForDate(currentStr, 2);
+                if (titles.length > 0) {
+                    const titlesContainer = document.createElement('div');
+                    titlesContainer.className = 'event-titles';
+                    
+                    titles.forEach(title => {
+                        const titleDiv = document.createElement('div');
+                        titleDiv.className = 'event-title-item';
+                        titleDiv.innerText = title.length > 28 ? title.substring(0, 26) + '…' : title;
+                        // Al hacer click sobre el título se abre la edición del primer evento que coincida? 
+                        // Para mejor UX, si se hace click en título se selecciona el día y abre el primer evento de ese día (o el panel).
+                        titleDiv.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            // Seleccionar este día y abrir el modal del primer evento de la fecha
+                            selectedDateStr = currentStr;
+                            renderCalendar();
+                            renderSelectedDateEvents();
+                            const firstEvent = getEventsForDate(currentStr)[0];
+                            if (firstEvent) openEventModal(firstEvent.id);
+                            else openEventModal(null, `${currentStr}T10:00`);
+                        });
+                        titlesContainer.appendChild(titleDiv);
+                    });
+                    
+                    if (remaining > 0) {
+                        const moreSpan = document.createElement('div');
+                        moreSpan.className = 'more-events';
+                        moreSpan.innerText = `+${remaining} más`;
+                        moreSpan.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            selectedDateStr = currentStr;
+                            renderCalendar();
+                            renderSelectedDateEvents();
+                        });
+                        titlesContainer.appendChild(moreSpan);
+                    }
+                    dayDiv.appendChild(titlesContainer);
+                }
+                
+                // Puntos rojos (mantener funcionalidad original como complemento)
+                const dayStartEvents = events.filter(ev => ev.startDate && ev.startDate.startsWith(currentStr));
+                if (dayStartEvents.length > 0 && titles.length === 0) {
+                    // Si ya mostramos títulos, los puntos pueden ser redundantes pero se conservan igual por solicitud "intacto"
+                    const dot = document.createElement('div');
+                    dot.className = 'event-dot';
+                    dayDiv.appendChild(dot);
+                } else if (dayStartEvents.length > 0) {
+                    // Aún así mostramos un punto pequeño si hay eventos que empiezan ese día (sutil)
+                    const dot = document.createElement('div');
+                    dot.className = 'event-dot';
+                    dayDiv.appendChild(dot);
+                }
+                
+                // Click en la celda (seleccionar día)
+                dayDiv.addEventListener('click', (e) => {
+                    if (e.target === titleDiv || e.target?.classList?.contains('event-title-item') || e.target?.classList?.contains('more-events')) return;
+                    selectedDateStr = currentStr;
+                    renderCalendar();
+                    renderSelectedDateEvents();
+                });
+                
+                grid.appendChild(dayDiv);
+            }
+        }
+
+        // ========== PANEL LATERAL DE EVENTOS ==========
         function renderSelectedDateEvents() {
             const container = document.getElementById('selected-day-events');
-            const title = document.getElementById('selected-date-title');
+            const titleElem = document.getElementById('selected-date-title');
+            if (!container) return;
+            
             const dateObj = new Date(selectedDateStr + "T12:00:00");
-            const dateTxt = dateObj.toLocaleDateString('es-ES', { day:'numeric', month:'short' });
-            title.innerHTML = `<i class="fas fa-calendar-day"></i> Eventos (${dateTxt})`;
-
-            const filtered = events.filter(e => e.startDate && e.startDate.startsWith(selectedDateStr));
-
+            const dateTxt = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+            titleElem.innerHTML = `<i class="fas fa-calendar-day"></i> Eventos (${dateTxt})`;
+            
+            const filtered = getEventsForDate(selectedDateStr);
+            
             if (filtered.length === 0) {
                 container.innerHTML = '<p style="color: #999; text-align: center; font-size: 0.8rem; margin-top: 20px;">No hay eventos para esta fecha.</p>';
                 return;
             }
-
-            container.innerHTML = filtered.map(e => {
-                const time = e.startDate ? e.startDate.split('T')[1] : '--:--';
+            
+            filtered.sort((a,b) => (a.startDate || "").localeCompare(b.startDate || ""));
+            
+            container.innerHTML = filtered.map(ev => {
+                let timeRange = "";
+                if (ev.startDate) {
+                    const startTime = ev.startDate.split('T')[1]?.slice(0,5) || "--:--";
+                    const endTime = ev.endDate ? ev.endDate.split('T')[1]?.slice(0,5) : "";
+                    timeRange = startTime;
+                    if (endTime) timeRange += ` - ${endTime}`;
+                } else {
+                    timeRange = "Todo el día";
+                }
                 return `
-                    <div class="event-side-card" onclick="openEventModal('${e.id}')">
+                    <div class="event-side-card" onclick="openEventModal('${ev.id}')">
                         <div style="flex-grow: 1;">
-                            <strong>${e.title}</strong>
-                            <div style="font-size: 0.75rem; color: #666;">${time}</div>
+                            <strong>${escapeHtml(ev.title)}</strong>
+                            <div style="font-size: 0.75rem; color: #666;">${timeRange}</div>
+                            ${ev.description ? `<div style="font-size:0.7rem; color:#888; margin-top:3px;">${escapeHtml(ev.description.substring(0, 60))}</div>` : ''}
                         </div>
                         <i class="fas fa-chevron-right" style="color: #ccc; font-size: 0.7rem;"></i>
                     </div>
                 `;
             }).join('');
         }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-grid');
-            grid.innerHTML = '';
-            const month = viewDate.getMonth();
-            const year = viewDate.getFullYear();
-            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            document.getElementById('current-month-label').innerText = `${monthNames[month]} ${year}`;
-
-            ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].forEach(d => {
-                const h = document.createElement('div'); h.className = 'weekday'; h.innerText = d; grid.appendChild(h);
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
             });
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            for (let i = 0; i < firstDay; i++) {
-                const e = document.createElement('div'); e.className = 'day empty'; grid.appendChild(e);
-            }
-
-            const todayStr = new Date().toLocaleDateString('en-CA');
-            for (let d = 1; d <= daysInMonth; d++) {
-                const currentDay = new Date(year, month, d);
-                const currentStr = currentDay.toLocaleDateString('en-CA');
-                
-                const dayDiv = document.createElement('div');
-                dayDiv.className = `day ${currentStr === todayStr ? 'today' : ''} ${currentStr === selectedDateStr ? 'selected' : ''}`;
-                dayDiv.innerHTML = `<span class="day-number">${d}</span>`;
-
-                const dayEvents = events.filter(e => e.startDate && e.startDate.startsWith(currentStr));
-                dayEvents.forEach(ev => {
-                    const dot = document.createElement('div'); dot.className = 'event-dot'; dayDiv.appendChild(dot);
-                });
-
-                dayDiv.onclick = () => {
-                    selectedDateStr = currentStr;
-                    renderCalendar();
-                    renderSelectedDateEvents();
-                };
-                grid.appendChild(dayDiv);
-            }
         }
 
-        function moveMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
-        function goToday() { viewDate = new Date(); selectedDateStr = viewDate.toLocaleDateString('en-CA'); renderCalendar(); renderSelectedDateEvents(); }
+        // ========== NAVEGACIÓN MES ==========
+        function moveMonth(direction) {
+            viewDate.setMonth(viewDate.getMonth() + direction);
+            renderCalendar();
+        }
+        
+        function goToday() {
+            viewDate = new Date();
+            selectedDateStr = viewDate.toLocaleDateString('en-CA');
+            renderCalendar();
+            renderSelectedDateEvents();
+        }
 
+        // ========== CRUD EVENTOS ==========
         async function saveEvent() {
             const id = document.getElementById('event-id').value;
-            const data = {
-                title: document.getElementById('ev-title').value,
-                startDate: document.getElementById('ev-startDate').value,
-                endDate: document.getElementById('ev-endDate').value,
-                description: document.getElementById('ev-description').value,
+            const title = document.getElementById('ev-title').value.trim();
+            const startDate = document.getElementById('ev-startDate').value;
+            let endDate = document.getElementById('ev-endDate').value;
+            
+            if (!title) {
+                alert("El título del evento es obligatorio.");
+                return;
+            }
+            if (!startDate) {
+                alert("Debe establecer una fecha y hora de inicio.");
+                return;
+            }
+            if (!endDate || endDate === "") {
+                endDate = startDate;
+            }
+            
+            const eventData = {
+                title: title,
+                startDate: startDate,
+                endDate: endDate,
+                description: document.getElementById('ev-description').value || "",
                 type: 'event'
             };
-            if(!data.title || !data.startDate) return;
-            if(id) await mainRef.collection('events').doc(id).update(data);
-            else await mainRef.collection('events').add(data);
-            closeModal('event-modal');
-        }
-
-        function openEventModal(id = null, start = '') {
-            document.getElementById('event-id').value = id || '';
-            if(id) {
-                const e = events.find(x => x.id === id);
-                document.getElementById('ev-title').value = e.title;
-                document.getElementById('ev-startDate').value = e.startDate || '';
-                document.getElementById('ev-endDate').value = e.endDate || '';
-                document.getElementById('ev-description').value = e.description || '';
-            } else {
-                document.querySelectorAll('#event-modal input, #event-modal textarea').forEach(i => i.value = '');
-                document.getElementById('ev-startDate').value = start || (selectedDateStr + "T09:00");
+            
+            try {
+                if (id) {
+                    await mainRef.collection('events').doc(id).update(eventData);
+                } else {
+                    await mainRef.collection('events').add(eventData);
+                }
+                closeModal('event-modal');
+            } catch (error) {
+                console.error("Error guardando evento: ", error);
+                alert("Ocurrió un error al guardar el evento.");
             }
-            document.getElementById('event-modal').style.display = 'flex';
         }
-
+        
+        async function deleteEvent() {
+            const id = document.getElementById('event-id').value;
+            if (!id) return;
+            if (confirm("¿Eliminar este evento permanentemente?")) {
+                try {
+                    await mainRef.collection('events').doc(id).delete();
+                    closeModal('event-modal');
+                } catch (error) {
+                    console.error("Error eliminando: ", error);
+                    alert("No se pudo eliminar el evento.");
+                }
+            }
+        }
+        
+        function openEventModal(eventId = null, presetStart = '') {
+            const modal = document.getElementById('event-modal');
+            const deleteBtn = document.getElementById('btn-delete-event');
+            const modalTitle = document.getElementById('event-modal-title');
+            
+            document.getElementById('event-id').value = '';
+            document.getElementById('ev-title').value = '';
+            document.getElementById('ev-startDate').value = '';
+            document.getElementById('ev-endDate').value = '';
+            document.getElementById('ev-description').value = '';
+            
+            if (eventId) {
+                const ev = events.find(e => e.id === eventId);
+                if (ev) {
+                    document.getElementById('event-id').value = ev.id;
+                    document.getElementById('ev-title').value = ev.title || '';
+                    document.getElementById('ev-startDate').value = ev.startDate || '';
+                    document.getElementById('ev-endDate').value = ev.endDate || '';
+                    document.getElementById('ev-description').value = ev.description || '';
+                    deleteBtn.style.display = 'flex';
+                    modalTitle.innerText = 'Editar Evento';
+                } else {
+                    deleteBtn.style.display = 'none';
+                    modalTitle.innerText = 'Nuevo Evento';
+                }
+            } else {
+                deleteBtn.style.display = 'none';
+                modalTitle.innerText = 'Nuevo Evento';
+                let startDefault = presetStart;
+                if (!startDefault && selectedDateStr) {
+                    startDefault = `${selectedDateStr}T09:00`;
+                }
+                if (startDefault) document.getElementById('ev-startDate').value = startDefault;
+                if (startDefault) {
+                    try {
+                        let startDateObj = new Date(startDefault);
+                        if (!isNaN(startDateObj)) {
+                            startDateObj.setHours(startDateObj.getHours() + 1);
+                            let endDefault = startDateObj.toISOString().slice(0,16);
+                            document.getElementById('ev-endDate').value = endDefault;
+                        }
+                    } catch(e) {}
+                }
+            }
+            modal.style.display = 'flex';
+        }
+        
+        // Próximos 3 días (outlook)
         function openOutlook() {
-            const body = document.getElementById('outlook-body');
-            body.innerHTML = '';
+            const tbody = document.getElementById('outlook-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
             const now = new Date();
-            const limit = new Date(); limit.setDate(now.getDate() + 3);
-            const upcoming = events.filter(e => {
-                const d = new Date(e.startDate); return d >= now && d <= limit;
+            const limit = new Date();
+            limit.setDate(now.getDate() + 3);
+            limit.setHours(23,59,59);
+            
+            const upcoming = events.filter(ev => {
+                if (!ev.startDate) return false;
+                const evStart = new Date(ev.startDate);
+                return evStart >= now && evStart <= limit;
             }).sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
-
-            upcoming.forEach(e => {
-                const d = new Date(e.startDate);
-                body.innerHTML += `<tr><td>${d.toLocaleDateString('es-ES', {weekday:'short', day:'numeric'})}</td><td>${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td><td>${e.title}</td></tr>`;
-            });
+            
+            if (upcoming.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay eventos próximos.</td></tr>';
+            } else {
+                upcoming.forEach(ev => {
+                    const startDateObj = new Date(ev.startDate);
+                    const diaFormato = startDateObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+                    const horaFormato = startDateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${diaFormato}</td>
+                            <td>${horaFormato}</td>
+                            <td><strong>${escapeHtml(ev.title)}</strong> ${ev.description ? `<br><small>${escapeHtml(ev.description.substring(0,40))}</small>` : ''}</td>
+                        </tr>
+                    `;
+                });
+            }
             document.getElementById('outlook-modal').style.display = 'flex';
         }
-
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        window.onclick = function(event) {
+            const modalEvent = document.getElementById('event-modal');
+            const modalOutlook = document.getElementById('outlook-modal');
+            if (event.target === modalEvent) closeModal('event-modal');
+            if (event.target === modalOutlook) closeModal('outlook-modal');
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const todayLabel = document.getElementById('today-date-label');
+            if (todayLabel) {
+                todayLabel.innerText = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            }
+            loadFirebaseData();
+        });
     </script>
 </body>
 </html>
