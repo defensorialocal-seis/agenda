@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda Digital</title>
+    <title>Agenda Digital - Eventos con rango de fechas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -37,7 +37,6 @@
         }
         
         .active-nav { background: #eff6ff; color: #3b82f6; border-right: 4px solid #3b82f6; }
-        /* Estilo para nav móvil activa */
         .active-nav-mobile { color: #3b82f6; border-top: 3px solid #3b82f6; }
         
         .modal-animate { animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -55,7 +54,6 @@
             font-weight: 600;
         }
 
-        /* Ocultar scrollbar pero mantener funcionalidad */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -230,17 +228,19 @@
         </div>
     </div>
 
+    <!-- Modal de evento MODIFICADO: ahora incluye fecha inicio y fecha fin -->
     <div id="taskModal" class="hidden fixed inset-0 bg-slate-900/50 z-[400] flex items-center justify-center p-4">
         <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden relative max-h-[90vh] flex flex-col">
             <div class="p-6 border-b flex justify-between items-center bg-slate-50 font-extrabold">
-                <span>Formulario de Evento</span>
+                <span>Formulario de Evento (con rango de fechas)</span>
                 <button onclick="closeModal('taskModal')"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form id="taskForm" class="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="hidden" id="t-id">
                 <div class="md:col-span-2"><label class="text-[10px] font-extrabold text-slate-400 uppercase">Título</label><input type="text" id="t-title" required class="w-full bg-slate-100 border-none rounded-xl p-4 mt-1 font-bold"></div>
-                <div><label class="text-[10px] font-extrabold text-slate-400 uppercase">Fecha</label><input type="date" id="t-date" required class="w-full bg-slate-100 border-none rounded-xl p-4 mt-1 font-bold"></div>
-                <div><label class="text-[10px] font-extrabold text-slate-400 uppercase">Hora</label><input type="time" id="t-time" required class="w-full bg-slate-100 border-none rounded-xl p-4 mt-1 font-bold"></div>
+                <div><label class="text-[10px] font-extrabold text-slate-400 uppercase">Fecha inicio</label><input type="date" id="t-start-date" required class="w-full bg-slate-100 border-none rounded-xl p-4 mt-1 font-bold"></div>
+                <div><label class="text-[10px] font-extrabold text-slate-400 uppercase">Fecha fin</label><input type="date" id="t-end-date" class="w-full bg-slate-100 border-none rounded-xl p-4 mt-1 font-bold"></div>
+                <div><label class="text-[10px] font-extrabold text-slate-400 uppercase">Hora (solo para el inicio)</label><input type="time" id="t-time" required class="w-full bg-slate-100 border-none rounded-xl p-4 mt-1 font-bold"></div>
                 <div><label class="text-[10px] font-extrabold text-slate-400 uppercase">Contacto</label><select id="t-contact" class="w-full bg-slate-100 border-none rounded-xl p-4 mt-1 font-bold"></select></div>
                 <div><label class="text-[10px] font-extrabold text-slate-400 uppercase">Estado</label><select id="t-status" class="w-full bg-slate-100 border-none rounded-xl p-4 mt-1 font-bold"><option value="pending">Pendiente</option><option value="completed">Completada</option></select></div>
                 <button type="submit" class="md:col-span-2 bg-primary text-white font-extrabold py-4 rounded-xl mt-4 text-lg">Guardar Evento</button>
@@ -258,7 +258,7 @@
                 <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-50">
                     <h3 id="pt-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6 truncate">---</h3>
                     <div class="space-y-4">
-                        <div class="flex items-center gap-4"><i class="fa-solid fa-calendar text-primary"></i><span id="pt-date" class="font-extrabold">--/--/--</span></div>
+                        <div class="flex items-center gap-4"><i class="fa-solid fa-calendar text-primary"></i><span id="pt-date-range" class="font-extrabold">--/--/-- - --/--/--</span></div>
                         <div class="flex items-center gap-4"><i class="fa-solid fa-clock text-primary"></i><span id="pt-time" class="font-extrabold">00:00</span></div>
                     </div>
                 </div>
@@ -311,7 +311,7 @@
     </div>
 
     <script>
-        // Mantenemos toda tu lógica original de Firebase y funciones
+        // Configuración Firebase (sin cambios)
         const firebaseConfig = {
             apiKey: "AIzaSyBZZOjKInC-GpNvhyRSXWs3x6w_JQ7TtuU",
             authDomain: "agendatareas6.firebaseapp.com",
@@ -324,7 +324,8 @@
         const db = firebase.firestore();
         const mainRef = db.collection('users').doc('defaultUser');
 
-        const state = { tasks: [], contacts: [], renderDate: new Date(), deleteTarget: null, hasShownAlert: false, notifiedEvents: new Set() };
+        // Estado ampliado: los eventos ahora tienen startDate (fecha+Hora), endDate (solo fecha)
+        let state = { tasks: [], contacts: [], renderDate: new Date(), deleteTarget: null, hasShownAlert: false, notifiedEvents: new Set() };
 
         function enterApp() {
             document.getElementById('landingPage').classList.add('hidden');
@@ -343,11 +344,34 @@
             state.hasShownAlert = false;
         }
 
+        // Sincronización: transforma los eventos antiguos a nuevo formato si es necesario
         function syncData() {
             mainRef.collection('events').onSnapshot(snap => {
                 state.tasks = snap.docs.map(doc => {
-                    const d = doc.data();
-                    return { id: doc.id, ...d, date: d.startDate?.split('T')[0] || d.date, time: d.startDate?.split('T')[1] || d.time };
+                    const data = doc.data();
+                    // Si el evento ya tiene endDate, lo usa. Si no, lo deduce de startDate o del antiguo campo date
+                    let startDate = data.startDate; // formato "YYYY-MM-DDTHH:MM"
+                    let endDate = data.endDate;
+                    let time = data.time;
+                    if (!startDate && data.date && data.time) {
+                        startDate = `${data.date}T${data.time}`;
+                    }
+                    if (!endDate) {
+                        // Si existe data.endDateStr, lo usa; si no, toma la misma fecha que startDate (o date)
+                        endDate = data.endDateStr || (startDate ? startDate.split('T')[0] : data.date);
+                    }
+                    if (!time && startDate) time = startDate.split('T')[1];
+                    return {
+                        id: doc.id,
+                        title: data.title,
+                        startDate: startDate,
+                        endDate: endDate,
+                        time: time,
+                        contactId: data.contactId,
+                        status: data.status,
+                        // compatibilidad para funciones que usan .date
+                        date: startDate ? startDate.split('T')[0] : null
+                    };
                 });
                 if(!state.hasShownAlert) { checkUrgentEvents(); state.hasShownAlert = true; }
                 refreshUI();
@@ -358,31 +382,37 @@
             });
         }
 
-        // Modificamos ligeramente navigate para actualizar UI móvil
+        // Función auxiliar: verifica si un evento cubre una fecha dada (formato YYYY-MM-DD)
+        function eventCoversDate(event, dateStr) {
+            if (!event.startDate) return false;
+            const startDateOnly = event.startDate.split('T')[0];
+            const end = event.endDate || startDateOnly;
+            return dateStr >= startDateOnly && dateStr <= end;
+        }
+
+        // Navegación (sin cambios)
         function navigate(v) { 
             ['dashboard', 'calendar', 'contacts'].forEach(x => { 
                 document.getElementById(`view-${x}`).classList.toggle('hidden', x !== v); 
-                
-                // Desktop Sidebar
                 document.getElementById(`nav-${x}`).classList.toggle('active-nav', x === v); 
-                
-                // Mobile Nav
                 const mNav = document.getElementById(`m-nav-${x}`);
                 if(mNav) {
                     mNav.classList.toggle('active-nav-mobile', x === v);
                     mNav.classList.toggle('text-slate-400', x !== v);
                 }
             }); 
-            // Cerrar scroll en móvil al navegar
             document.getElementById('app-view').scrollTop = 0;
         }
 
+        // Alertas: solo para el día de inicio, 10 minutos antes
         function checkUpcomingTasks() {
             const now = new Date();
             const todayStr = now.toLocaleDateString('en-CA');
             state.tasks.forEach(t => {
-                if(t.status === 'completed' || t.date !== todayStr) return;
-                const eventTime = new Date(`${t.date}T${t.time}`);
+                if(t.status === 'completed') return;
+                const startDateOnly = t.startDate?.split('T')[0];
+                if(startDateOnly !== todayStr) return;
+                const eventTime = new Date(t.startDate);
                 const diffMins = Math.round((eventTime - now) / 60000);
                 if(diffMins === 10 && !state.notifiedEvents.has(t.id)) {
                     triggerAlarm(t); state.notifiedEvents.add(t.id);
@@ -406,7 +436,9 @@
             const threeDayLimit = new Date(); threeDayLimit.setDate(now.getDate() + 3);
             const urgentTasks = state.tasks.filter(t => {
                 if (t.status === 'completed') return false;
-                const tDate = new Date(t.date + "T00:00:00");
+                const startDateOnly = t.startDate?.split('T')[0];
+                if (!startDateOnly) return false;
+                const tDate = new Date(startDateOnly + "T00:00:00");
                 return tDate >= now && tDate <= threeDayLimit;
             });
             if (urgentTasks.length > 0) {
@@ -423,8 +455,8 @@
         }
 
         function checkDailySummary() {
-            const today = new Date().toLocaleDateString('en-CA');
-            const tasksToday = state.tasks.filter(t => t.date === today && t.status !== 'completed');
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            const tasksToday = state.tasks.filter(t => t.status !== 'completed' && eventCoversDate(t, todayStr));
             const alertBox = document.getElementById('welcomeAlert');
             document.getElementById('alertIcon').className = "w-12 h-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center";
             document.getElementById('alertTitle').innerText = "Resumen de hoy";
@@ -452,17 +484,20 @@
             closeModal(type === 'task' ? 'previewTaskModal' : 'previewContactModal');
         };
 
+        // Vista previa de evento (muestra rango)
         function showTaskPreview(id) {
             const t = state.tasks.find(x => x.id === id);
             const isP = t.status !== 'completed';
-            let displayDate = '---';
-            if (t.date) {
-                const parts = t.date.split('-');
-                displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
+            const startDateOnly = t.startDate?.split('T')[0] || '';
+            const endDateOnly = t.endDate || startDateOnly;
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '---';
+                const parts = dateStr.split('-');
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            };
             document.getElementById('pt-title').innerText = t.title;
-            document.getElementById('pt-date').innerText = displayDate;
-            document.getElementById('pt-time').innerText = t.time; 
+            document.getElementById('pt-date-range').innerHTML = `${formatDate(startDateOnly)} - ${formatDate(endDateOnly)}`;
+            document.getElementById('pt-time').innerText = t.time || '--:--';
             document.getElementById('pt-badge').innerText = isP ? "Pendiente" : "Completada";
             document.getElementById('pt-badge').className = `px-4 py-2 rounded-full text-[10px] font-extrabold uppercase ${isP ? 'bg-orange-500' : 'bg-green-500'} text-white`;
             document.getElementById('pt-btn-edit').onclick = () => { closeModal('previewTaskModal'); editTask(t.id); };
@@ -474,29 +509,39 @@
             openModal('previewTaskModal');
         }
 
+        // Dashboard: filtra eventos cuyo rango intersecte con el período seleccionado
         function renderDashboard() {
             const list = document.getElementById('dashboard-list'); list.innerHTML = '';
             const range = parseInt(document.getElementById('rangeSelector').value);
             const now = new Date(); now.setHours(0,0,0,0);
             const limit = new Date(); limit.setDate(now.getDate() + range);
             const filtered = state.tasks.filter(t => {
-                const d = new Date(t.date + "T12:00:00");
-                return d >= now && d <= limit;
-            }).sort((a,b) => a.date.localeCompare(b.date));
+                if (!t.startDate) return false;
+                const startDateOnly = t.startDate.split('T')[0];
+                const endDateOnly = t.endDate || startDateOnly;
+                const eventStart = new Date(startDateOnly + "T00:00:00");
+                const eventEnd = new Date(endDateOnly + "T00:00:00");
+                // Hay intersección si el rango del evento toca [now, limit]
+                return eventStart <= limit && eventEnd >= now;
+            }).sort((a,b) => (a.startDate || '').localeCompare(b.startDate || ''));
             if(filtered.length === 0) {
                 list.innerHTML = `<div class="p-10 text-center text-slate-400 text-sm font-extrabold">No hay eventos próximos.</div>`;
                 return;
             }
             filtered.forEach(t => {
                 const isP = t.status !== 'completed';
+                const startDateOnly = t.startDate.split('T')[0];
+                const endDateOnly = t.endDate || startDateOnly;
+                const rangeStr = startDateOnly === endDateOnly ? startDateOnly : `${startDateOnly} → ${endDateOnly}`;
                 const div = document.createElement('div');
                 div.className = "flex items-center gap-3 p-4 rounded-2xl bg-white border-2 border-slate-50 shadow-sm cursor-pointer";
                 div.onclick = () => showTaskPreview(t.id);
-                div.innerHTML = `<div class="w-10 h-10 rounded-xl ${isP ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'} flex items-center justify-center flex-shrink-0"><i class="fa-solid ${isP ? 'fa-clock' : 'fa-check'}"></i></div><div class="flex-1 font-extrabold text-sm text-slate-800 truncate">${t.title}</div><span class="text-[9px] font-extrabold px-2 py-1 rounded-lg ${isP ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'}">${isP ? 'PENDIENTE' : 'OK'}</span>`;
+                div.innerHTML = `<div class="w-10 h-10 rounded-xl ${isP ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'} flex items-center justify-center flex-shrink-0"><i class="fa-solid ${isP ? 'fa-clock' : 'fa-check'}"></i></div><div class="flex-1 font-extrabold text-sm text-slate-800 truncate">${t.title} <span class="text-[9px] text-slate-400">(${rangeStr})</span></div><span class="text-[9px] font-extrabold px-2 py-1 rounded-lg ${isP ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'}">${isP ? 'PENDIENTE' : 'OK'}</span>`;
                 list.appendChild(div);
             });
         }
 
+        // Calendario: muestra el título del evento en cada día que cubre
         function renderCalendar() {
             const body = document.getElementById('calendar-body'); body.innerHTML = '';
             const y = state.renderDate.getFullYear(), m = state.renderDate.getMonth();
@@ -506,21 +551,34 @@
             for(let i=0; i<first; i++) body.innerHTML += `<div class="day-box bg-slate-50/30"></div>`;
             for(let d=1; d<=total; d++) {
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const dayTasks = state.tasks.filter(t => t.date === ds);
+                const dayEvents = state.tasks.filter(t => t.status !== 'deleted' && eventCoversDate(t, ds));
                 const div = document.createElement('div');
                 div.className = `day-box p-1 md:p-3 cursor-pointer ${ds === todayStr ? 'today' : ''}`;
                 div.innerHTML = `<span class="text-[10px] text-slate-400 font-extrabold">${d}</span>`;
-                dayTasks.forEach(t => div.innerHTML += `<div class="text-[7px] md:text-[9px] truncate px-1 py-0.5 rounded-md mt-0.5 text-white font-extrabold ${t.status === 'completed' ? 'bg-success' : 'bg-pending'}">${t.title}</div>`);
-                div.onclick = () => { if(dayTasks.length) showTaskPreview(dayTasks[0].id); else { document.getElementById('t-date').value = ds; openTaskModal(); } };
+                dayEvents.forEach(t => {
+                    div.innerHTML += `<div class="text-[7px] md:text-[9px] truncate px-1 py-0.5 rounded-md mt-0.5 text-white font-extrabold ${t.status === 'completed' ? 'bg-success' : 'bg-pending'}">${t.title}</div>`;
+                });
+                div.onclick = () => { 
+                    if(dayEvents.length) showTaskPreview(dayEvents[0].id); 
+                    else { 
+                        // Prellenar inicio y fin con la misma fecha
+                        document.getElementById('t-start-date').value = ds;
+                        document.getElementById('t-end-date').value = ds;
+                        openTaskModal(); 
+                    } 
+                };
                 body.appendChild(div);
             }
         }
         
+        // Estadísticas: "hoy" considera eventos que cubren la fecha actual
         function updateStats() {
             document.getElementById('stat-pending').innerText = state.tasks.filter(t => t.status !== 'completed').length;
             document.getElementById('stat-completed').innerText = state.tasks.filter(t => t.status === 'completed').length;
             document.getElementById('stat-contacts').innerText = state.contacts.length;
-            document.getElementById('stat-today').innerText = state.tasks.filter(t => t.date === new Date().toLocaleDateString('en-CA')).length;
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            const tasksToday = state.tasks.filter(t => eventCoversDate(t, todayStr));
+            document.getElementById('stat-today').innerText = tasksToday.length;
         }
 
         function updateContactSelectors() {
@@ -550,19 +608,51 @@
             openModal('previewContactModal');
         }
 
-        function openTaskModal() { document.getElementById('taskForm').reset(); document.getElementById('t-id').value = ""; openModal('taskModal'); }
+        function openTaskModal() { 
+            document.getElementById('taskForm').reset(); 
+            document.getElementById('t-id').value = ""; 
+            // Valores por defecto: inicio y fin vacíos
+            openModal('taskModal'); 
+        }
+
         function editTask(id) {
             const t = state.tasks.find(x => x.id === id);
-            document.getElementById('t-id').value = t.id; document.getElementById('t-title').value = t.title;
-            document.getElementById('t-date').value = t.date; document.getElementById('t-time').value = t.time;
-            document.getElementById('t-status').value = t.status; document.getElementById('t-contact').value = t.contactId || "";
+            const startDateOnly = t.startDate ? t.startDate.split('T')[0] : '';
+            const endDateOnly = t.endDate || startDateOnly;
+            document.getElementById('t-id').value = t.id;
+            document.getElementById('t-title').value = t.title;
+            document.getElementById('t-start-date').value = startDateOnly;
+            document.getElementById('t-end-date').value = endDateOnly;
+            document.getElementById('t-time').value = t.time || '';
+            document.getElementById('t-status').value = t.status;
+            document.getElementById('t-contact').value = t.contactId || "";
             openModal('taskModal');
         }
 
+        // Guardar evento con rango
         document.getElementById('taskForm').onsubmit = async (e) => {
-            e.preventDefault(); const id = document.getElementById('t-id').value;
-            const data = { title: document.getElementById('t-title').value, startDate: `${document.getElementById('t-date').value}T${document.getElementById('t-time').value}`, contactId: document.getElementById('t-contact').value, status: document.getElementById('t-status').value };
-            id ? await mainRef.collection('events').doc(id).update(data) : await mainRef.collection('events').add(data);
+            e.preventDefault(); 
+            const id = document.getElementById('t-id').value;
+            let startDateRaw = document.getElementById('t-start-date').value;
+            let endDateRaw = document.getElementById('t-end-date').value;
+            const timeRaw = document.getElementById('t-time').value;
+            if (!startDateRaw) return alert("Debes seleccionar fecha de inicio");
+            if (!endDateRaw) endDateRaw = startDateRaw;
+            if (endDateRaw < startDateRaw) return alert("La fecha de fin no puede ser anterior a la de inicio");
+            const startDateTime = `${startDateRaw}T${timeRaw}`;
+            const data = {
+                title: document.getElementById('t-title').value,
+                startDate: startDateTime,
+                endDate: endDateRaw,
+                time: timeRaw,
+                contactId: document.getElementById('t-contact').value,
+                status: document.getElementById('t-status').value
+            };
+            if (id) {
+                await mainRef.collection('events').doc(id).update(data);
+            } else {
+                await mainRef.collection('events').add(data);
+            }
             closeModal('taskModal');
         };
 
